@@ -1,41 +1,47 @@
-const sqlite3 = require('sqlite3').verbose();
+const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = process.env.VERCEL
-  ? path.join('/tmp', 'study_app.db')
-  : path.resolve(__dirname, '..', 'study_app.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('SQLite connection error:', err.message);
-  } else {
-    console.log('SQLite connected:', dbPath);
-  }
-});
+const dbDir = process.env.VERCEL ? '/tmp' : path.resolve(__dirname, '..');
+const dbPath = path.join(dbDir, 'study_app.db');
+
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new DatabaseSync(dbPath);
 
 function run(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) return reject(err);
-      resolve({ lastID: this.lastID, changes: this.changes });
-    });
+    try {
+      const stmt = db.prepare(sql);
+      const result = stmt.run(...params);
+      resolve({ lastID: Number(result.lastInsertRowid), changes: result.changes });
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
 function get(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) return reject(err);
-      resolve(row);
-    });
+    try {
+      const stmt = db.prepare(sql);
+      resolve(stmt.get(...params));
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
 function all(sql, params = []) {
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows);
-    });
+    try {
+      const stmt = db.prepare(sql);
+      resolve(stmt.all(...params));
+    } catch (err) {
+      reject(err);
+    }
   });
 }
 
@@ -56,7 +62,7 @@ async function init() {
   try {
     await run('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0');
   } catch (err) {
-    if (!err.message.includes('duplicate column')) throw err;
+    if (!err.message.includes('duplicate column') && !err.message.includes('no such column')) throw err;
   }
 
   // Ensure at least one admin exists (oldest user becomes admin if none)
@@ -95,7 +101,7 @@ async function init() {
   try {
     await run('ALTER TABLE events ADD COLUMN duration_minutes INTEGER DEFAULT 60');
   } catch (err) {
-    if (!err.message.includes('duplicate column')) throw err;
+    if (!err.message.includes('duplicate column') && !err.message.includes('no such column')) throw err;
   }
 
   await run(`
