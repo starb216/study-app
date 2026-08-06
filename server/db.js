@@ -134,13 +134,6 @@ async function init() {
     )
   `);
 
-  // Index to keep session lookups fast for active users
-  try {
-    await run('CREATE INDEX IF NOT EXISTS idx_study_sessions_user_id ON study_sessions(user_id)');
-  } catch (err) {
-    console.warn('Could not create study_sessions index:', err.message);
-  }
-
   await run(`
     CREATE TABLE IF NOT EXISTS sleep_schedules (
       id SERIAL PRIMARY KEY,
