@@ -227,7 +227,7 @@ async function loadDashboard() {
       api('/study/streaks')
     ]);
     currentUser.currency = balance.balance;
-    document.getElementById('dashBalance').textContent = `${balance.balance} 🪙`;
+    document.getElementById('dashBalance').textContent = `${balance.balance} 🐚`;
     document.getElementById('dashTasks').textContent = tasks.filter((t) => !t.completed).length;
     document.getElementById('dashSessions').textContent = sessions.length;
     document.getElementById('dashStreak').textContent = streaks.current_streak;
@@ -1037,7 +1037,7 @@ function setupTimer() {
       if (expectedSessionId) {
         const data = await api(`/study/session/${expectedSessionId}`, { method: 'PUT' });
         if (timerRunning && timerSessionId === expectedSessionId) {
-          result.textContent = `+${data.session.currency_earned} 🪙 earned this run (pause to lose it)`;
+          result.textContent = `+${data.session.currency_earned} 🐚 earned this run (pause to lose it)`;
         }
         return data;
       } else {
@@ -1047,7 +1047,7 @@ function setupTimer() {
         });
         if (timerRunning && timerSessionId === expectedSessionId) {
           timerSessionId = data.session.id;
-          result.textContent = `+${data.session.currency_earned} 🪙 earned this run (pause to lose it)`;
+          result.textContent = `+${data.session.currency_earned} 🐚 earned this run (pause to lose it)`;
         }
         return data;
       }
@@ -1074,7 +1074,7 @@ function setupTimer() {
     const minutes = Math.floor(timerSecondsWorked / 60);
     timerSecondsWorked = 0;
     if (minutes > 0) {
-      result.textContent = `Session complete! +${minutes} 🪙 kept.`;
+      result.textContent = `Session complete! +${minutes} 🐚 kept.`;
     } else {
       result.textContent = '';
     }
@@ -1127,7 +1127,7 @@ function setupTimer() {
     const refunded = await refundSession();
     if (refunded && secondsWorked >= 60) {
       const minutes = Math.floor(secondsWorked / 60);
-      result.textContent = `Paused. ${minutes} 🪙 taken back.`;
+      result.textContent = `Paused. ${minutes} 🐚 taken back.`;
     } else {
       result.textContent = 'Paused.';
     }
@@ -1191,7 +1191,7 @@ async function loadFriends() {
     } else {
       friends.forEach((f) => {
         const li = document.createElement('li');
-        li.innerHTML = `<div><strong>${escapeHtml(f.username)}</strong> <small>· ${f.currency} 🪙</small></div>`;
+        li.innerHTML = `<div><strong>${escapeHtml(f.username)}</strong> <small>· ${f.currency} 🐚</small></div>`;
         friendList.appendChild(li);
       });
     }
@@ -1266,7 +1266,7 @@ async function renderLeaderboard() {
     tbody.innerHTML = '';
 
     const isStreaks = leaderboardMetric === 'streaks';
-    valueHeader.textContent = isStreaks ? 'Streak Days' : 'Currency';
+    valueHeader.textContent = isStreaks ? 'Streak Days' : 'Shells';
 
     if (leaders.length === 0) {
       tbody.innerHTML = '<tr><td colspan="3">No data yet.</td></tr>';
@@ -1275,7 +1275,7 @@ async function renderLeaderboard() {
 
     leaders.forEach((u, i) => {
       const tr = document.createElement('tr');
-      const value = isStreaks ? `${u.streak || 0} 🔥` : `${u.currency} 🪙`;
+      const value = isStreaks ? `${u.streak || 0} 🔥` : `${u.currency} 🐚`;
       tr.innerHTML = `<td>${i + 1}</td><td>${escapeHtml(u.username)}</td><td>${value}</td>`;
       tbody.appendChild(tr);
     });
@@ -1384,7 +1384,7 @@ function renderAdminList(listId, items, type, fields) {
         if (f === 'due_date') return item.due_date ? `Due ${formatDate(item.due_date)}` : '';
         if (f === 'event_date') return formatDateTime(item.event_date);
         if (f === 'duration_minutes') return `${item.duration_minutes} min`;
-        if (f === 'currency_earned') return `+${item.currency_earned} 🪙`;
+        if (f === 'currency_earned') return `+${item.currency_earned} 🐚`;
         if (f === 'username') return `by ${escapeHtml(item.username)}`;
         return escapeHtml(item[f] || '');
       })

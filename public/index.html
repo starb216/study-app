@@ -79,8 +79,8 @@
       <div class="dashboard-cards">
         <div class="card">
           <h3>Welcome, <span id="dashUser">Student</span></h3>
-          <p class="big" id="dashBalance">0 🪙</p>
-          <p>Total study currency</p>
+          <p class="big" id="dashBalance">0 🐚</p>
+          <p>Total shells</p>
         </div>
         <div class="card">
           <h3>Tasks</h3>
@@ -180,7 +180,30 @@
       </div>
 
       <div id="monthCalendar" class="calendar-month-container">
-        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="visual-calendar-card">
+          <div class="visual-calendar-left">
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="mood-reminder" id="moodReminder"></div>
+          </div>
+          <div class="visual-calendar-right">
+            <button class="holiday-toggle" id="holidayToggle" type="button">Religious holidays: off</button>
+            <div class="display-label">Selected date</div>
+            <div class="finished-label" id="finishedLabel">FINISHED</div>
+            <div class="display-date" id="displayDate"></div>
+            <div class="display-year" id="displayYear"></div>
+
+            <div class="input-group">
+              <label for="occasionsInput">What is the most important thing?</label>
+              <textarea id="occasionsInput" placeholder="e.g. 8:30-9:30 meeting"></textarea>
+            </div>
+
+            <div class="input-group">
+              <label>What reminders?</label>
+              <div class="reminder-list" id="reminderList"></div>
+              <button class="add-reminder" id="addReminder" type="button">＋ Add reminder</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div id="timeGridCalendar" class="calendar-timegrid-container hidden">
@@ -190,6 +213,28 @@
 
       <h3>Upcoming</h3>
       <ul id="eventList" class="list"></ul>
+
+      <div class="alarm-overlay" id="alarmOverlay">
+        <div class="alarm-title">REMINDER</div>
+        <div class="alarm-subtitle" id="alarmText"></div>
+        <div class="alarm-remark" id="alarmRemark"></div>
+        <button class="alarm-btn" id="closeAlarm" type="button">Close Alarm</button>
+      </div>
+
+      <div class="mood-overlay" id="moodOverlay">
+        <div class="mood-box">
+          <div class="mood-title">How is your feeling?</div>
+          <div class="mood-options">
+            <button data-mood="😢" title="Sad" type="button">😢</button>
+            <button data-mood="😠" title="Angry" type="button">😠</button>
+            <button data-mood="😊" title="Happy" type="button">😊</button>
+            <button data-mood="😐" title="Boring" type="button">😐</button>
+            <button data-mood="🤷" title="IDK" type="button">🤷</button>
+            <button data-mood="clear" title="Clear" type="button">❌</button>
+          </div>
+          <button class="mood-go-back" id="moodGoBack" type="button">Go back</button>
+        </div>
+      </div>
     </section>
 
     <!-- Timer -->
@@ -251,7 +296,7 @@
       </div>
       <table class="table">
         <thead>
-          <tr><th>#</th><th>User</th><th id="leaderboardValueHeader">Currency</th></tr>
+          <tr><th>#</th><th>User</th><th id="leaderboardValueHeader">Shells</th></tr>
         </thead>
         <tbody id="leaderboardBody"></tbody>
       </table>
@@ -272,7 +317,7 @@
         <h3>All Users</h3>
         <table class="table">
           <thead>
-            <tr><th>ID</th><th>User</th><th>Email</th><th>Currency</th><th>Tasks</th><th>Sessions</th><th>Study Min</th><th>Admin</th><th>Joined</th><th>Actions</th></tr>
+            <tr><th>ID</th><th>User</th><th>Email</th><th>Shells</th><th>Tasks</th><th>Sessions</th><th>Study Min</th><th>Admin</th><th>Joined</th><th>Actions</th></tr>
           </thead>
           <tbody id="adminUsersBody"></tbody>
         </table>

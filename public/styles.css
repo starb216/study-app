@@ -911,3 +911,595 @@ button {
     font-size: 3rem;
   }
 }
+
+/* Visual calendar integration */
+.visual-calendar-card {
+  background: var(--card);
+  border: 2px solid #000;
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.visual-calendar-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.visual-calendar-left .calendar-grid {
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.visual-calendar-right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.holiday-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.holiday-toggle:hover {
+  background: #f0f0f0;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+}
+
+.calendar-day:hover {
+  background: #f0f0f0;
+}
+
+.calendar-day.other-month {
+  color: #aaa;
+}
+
+.calendar-day.today {
+  border-color: #000;
+}
+
+.calendar-day.selected {
+  box-shadow: 0 0 0 3px var(--primary);
+}
+
+.calendar-day.school-day,
+.calendar-day.family-day,
+.calendar-day.work-day {
+  border: none;
+}
+
+.calendar-day .day-number {
+  display: block;
+}
+
+.calendar-day.past-day .day-number {
+  margin-top: 12px;
+}
+
+.shape-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.shape-bg {
+  fill: #ddd;
+}
+
+.calendar-day.school-day .shape-bg {
+  fill: #a2d9ff;
+}
+
+.calendar-day.family-day .shape-bg {
+  fill: #ffb6c1;
+}
+
+.calendar-day.work-day .shape-bg {
+  fill: #ffe066;
+}
+
+.mood-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0.75;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.holiday-label {
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 5.5px;
+  font-weight: 700;
+  color: #d00;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  text-align: center;
+  white-space: normal;
+  overflow: hidden;
+  max-width: 92%;
+  z-index: 3;
+  pointer-events: none;
+  line-height: 1.1;
+}
+
+.day-number-svg {
+  font-size: 26px;
+  font-weight: 600;
+  fill: currentColor;
+  pointer-events: none;
+}
+
+.finished-label {
+  display: none;
+  font-size: 14px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #000;
+  margin-bottom: 4px;
+}
+
+.finished-label.show {
+  display: block;
+}
+
+.finished-tag {
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-12deg);
+  transform-origin: center center;
+  font-size: 7px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #000;
+  pointer-events: none;
+  line-height: 1;
+  z-index: 2;
+}
+
+.display-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.display-date {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.display-year {
+  font-size: 18px;
+  font-weight: 600;
+  color: #555;
+  margin-top: 6px;
+  margin-bottom: 24px;
+}
+
+.visual-calendar-right .input-group {
+  margin-bottom: 18px;
+}
+
+.visual-calendar-right .input-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.visual-calendar-right textarea {
+  width: 100%;
+  min-height: 60px;
+  border: 2px solid #000;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.reminder-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reminder-row {
+  border: 2px solid #000;
+  border-radius: 14px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.reminder-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+.reminder-row.compact .reminder-edit {
+  display: none;
+}
+
+.reminder-compact {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  min-height: 48px;
+}
+
+.reminder-row.compact .reminder-compact {
+  display: flex;
+}
+
+.reminder-summary {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reminder-summary .remark-dot {
+  margin-left: 6px;
+  font-size: 12px;
+}
+
+.reminder-badge {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 2px solid #000;
+  white-space: nowrap;
+}
+
+.reminder-badge.low {
+  background: #fff;
+}
+
+.reminder-badge.medium {
+  background: #ddd;
+}
+
+.reminder-badge.high {
+  background: #000;
+  color: #fff;
+}
+
+.reminder-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reminder-edit-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.reminder-row input,
+.reminder-row select {
+  border: 2px solid #000;
+  border-radius: 10px;
+  padding: 10px;
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.reminder-row input {
+  width: 100%;
+}
+
+.reminder-row select {
+  font-size: 14px;
+  font-weight: 700;
+  background: #fff;
+  cursor: pointer;
+}
+
+.reminder-row button {
+  width: 34px;
+  height: 34px;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.reminder-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.emergency-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #555;
+}
+
+.remark-area {
+  display: none;
+  width: 100%;
+  border: 2px solid #000;
+  border-radius: 18px;
+  border-top-left-radius: 4px;
+  padding: 14px;
+  font-family: inherit;
+  font-size: 15px;
+  min-height: 120px;
+  resize: vertical;
+  background: #f7f7f7;
+}
+
+.reminder-row.show-remark .remark-area {
+  display: block;
+}
+
+.add-reminder {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.add-reminder:hover {
+  background: #f0f0f0;
+}
+
+.mood-reminder {
+  font-size: 12px;
+  font-weight: 400;
+  color: #555;
+  margin-top: 18px;
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+}
+
+.mood-reminder:hover {
+  opacity: 0.7;
+}
+
+.calendar-day-chips {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.calendar-day-chip {
+  font-size: 8px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+
+.calendar-day-chip.event {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.calendar-day-chip.task {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.calendar-day-chip.task.completed {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.calendar-day-chip.more {
+  background: transparent;
+  color: #555;
+  text-align: center;
+}
+
+.alarm-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  color: #fff;
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  text-align: center;
+  padding: 40px;
+}
+
+.alarm-overlay.active {
+  display: flex;
+}
+
+.alarm-title {
+  font-size: clamp(48px, 10vw, 90px);
+  font-weight: 900;
+  margin-bottom: 16px;
+}
+
+.alarm-subtitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  opacity: 0.9;
+}
+
+.alarm-remark {
+  font-size: 17px;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-bottom: 40px;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.alarm-btn {
+  padding: 16px 36px;
+  font-size: 16px;
+  font-weight: 800;
+  border: 2px solid #fff;
+  background: #fff;
+  color: #000;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.mood-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  padding: 20px;
+}
+
+.mood-overlay.active {
+  display: flex;
+}
+
+.mood-box {
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 22px;
+  padding: 28px 34px;
+  text-align: center;
+  max-width: 340px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.mood-title {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.mood-options {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.mood-options button {
+  width: 52px;
+  height: 52px;
+  font-size: 28px;
+  line-height: 1;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.mood-options button:hover {
+  transform: scale(1.12);
+  background: #f0f0f0;
+}
+
+.mood-go-back {
+  display: block;
+  margin: 16px auto 0;
+  padding: 7px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 2px solid #000;
+  background: #fff;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.mood-go-back:hover {
+  background: #f0f0f0;
+}
+
+@media (max-width: 768px) {
+  .visual-calendar-card {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .visual-calendar-right {
+    text-align: left;
+  }
+
+  .holiday-toggle {
+    position: static;
+    align-self: flex-end;
+    margin-bottom: 1rem;
+  }
+}
