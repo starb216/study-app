@@ -1,64 +1,83 @@
 const { Pool } = require('@neondatabase/serverless');
+const { DatabaseSync } = require('node:sqlite');
 const path = require('path');
 
-const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL
-});
+const POSTGRES_URL = process.env.POSTGRES_URL;
+const usePostgres = !!POSTGRES_URL;
+
+let pool = null;
+let sqliteDb = null;
+
+if (usePostgres) {
+  pool = new Pool({ connectionString: POSTGRES_URL });
+} else {
+  sqliteDb = new DatabaseSync(path.join(__dirname, '..', 'study_app.db'));
+}
 
 function convertPlaceholders(sql) {
-  let n = 1;
-  return sql.replace(/\?/g, () => `$${n++}`);
+  if (usePostgres) {
+    let n = 1;
+    return sql.replace(/\?/g, () => `$${n++}`);
+  }
+  return sql;
+}
+
+function preparePostgresInsert(sql) {
+  if (usePostgres && /^\s*INSERT\s+/i.test(sql) && !/RETURNING/i.test(sql)) {
+    return `${sql} RETURNING id`;
+  }
+  return sql;
 }
 
 function run(sql, params = []) {
   return new Promise(async (resolve, reject) => {
-    let client;
     try {
-      let pgSql = convertPlaceholders(sql);
-      // PostgreSQL needs RETURNING to get inserted id like sqlite3's lastID
-      if (/^\s*INSERT\s+/i.test(pgSql) && !/RETURNING/i.test(pgSql)) {
-        pgSql += ' RETURNING id';
+      if (usePostgres) {
+        const pgSql = preparePostgresInsert(convertPlaceholders(sql));
+        const result = await pool.query(pgSql, params);
+        resolve({
+          lastID: result.rows[0]?.id ? Number(result.rows[0].id) : 0,
+          changes: result.rowCount || 0
+        });
+      } else {
+        const stmt = sqliteDb.prepare(convertPlaceholders(sql));
+        const info = stmt.run(...params);
+        resolve({ lastID: info.lastInsertRowid || 0, changes: info.changes || 0 });
       }
-      client = await pool.connect();
-      const result = await client.query(pgSql, params);
-      resolve({
-        lastID: result.rows[0]?.id ? Number(result.rows[0].id) : 0,
-        changes: result.rowCount || 0
-      });
     } catch (err) {
       reject(err);
-    } finally {
-      if (client) client.release();
     }
   });
 }
 
 function get(sql, params = []) {
   return new Promise(async (resolve, reject) => {
-    let client;
     try {
-      client = await pool.connect();
-      const result = await client.query(convertPlaceholders(sql), params);
-      resolve(result.rows[0]);
+      if (usePostgres) {
+        const result = await pool.query(convertPlaceholders(sql), params);
+        resolve(result.rows[0]);
+      } else {
+        const stmt = sqliteDb.prepare(convertPlaceholders(sql));
+        resolve(stmt.get(...params));
+      }
     } catch (err) {
       reject(err);
-    } finally {
-      if (client) client.release();
     }
   });
 }
 
 function all(sql, params = []) {
   return new Promise(async (resolve, reject) => {
-    let client;
     try {
-      client = await pool.connect();
-      const result = await client.query(convertPlaceholders(sql), params);
-      resolve(result.rows);
+      if (usePostgres) {
+        const result = await pool.query(convertPlaceholders(sql), params);
+        resolve(result.rows);
+      } else {
+        const stmt = sqliteDb.prepare(convertPlaceholders(sql));
+        resolve(stmt.all(...params));
+      }
     } catch (err) {
       reject(err);
-    } finally {
-      if (client) client.release();
     }
   });
 }
@@ -72,6 +91,7 @@ async function init() {
       password_hash TEXT NOT NULL,
       currency INTEGER DEFAULT 0,
       is_admin INTEGER DEFAULT 0,
+      avatar TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -79,6 +99,13 @@ async function init() {
   // Migration: add is_admin column if it doesn't exist (existing databases)
   try {
     await run('ALTER TABLE users ADD COLUMN is_admin INTEGER DEFAULT 0');
+  } catch (err) {
+    if (!err.message.includes('duplicate column') && !err.message.includes('already exists')) throw err;
+  }
+
+  // Migration: add avatar column if it doesn't exist
+  try {
+    await run('ALTER TABLE users ADD COLUMN avatar TEXT');
   } catch (err) {
     if (!err.message.includes('duplicate column') && !err.message.includes('already exists')) throw err;
   }
