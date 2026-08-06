@@ -20,6 +20,13 @@ let alarmOsc = null;
 let alarmInterval = null;
 let alarmCheckInterval = null;
 let hideCompletedItems = localStorage.getItem('cal_hide_completed') === 'true';
+
+let sleepSchedule = null;
+let sleepAlarmInterval = null;
+let sleepAlarmAudioCtx = null;
+let sleepAlarmOscillator = null;
+let sleepAlarmTriggeredToday = null;
+let sleepSnoozeUntil = null;
 let currentTheme = localStorage.getItem('study_app_theme') || '';
 const triggeredAlarms = new Set();
 
@@ -162,6 +169,8 @@ function setUser(user, token) {
   requestNotificationPermission();
   startNotificationChecks();
   startAlarmChecks();
+  startSleepAlarmLoop();
+  loadSleep();
 }
 
 function updateAdminNav() {
@@ -247,6 +256,7 @@ function logout() {
   timerRunning = false;
   timerRemaining = 0;
   stopNotificationChecks();
+  stopSleepAlarm();
   document.getElementById('mainNav').classList.add('hidden');
   document.getElementById('profileMenu').classList.add('hidden');
   showView('auth');
@@ -316,6 +326,8 @@ async function initAuth() {
     requestNotificationPermission();
     startNotificationChecks();
     startAlarmChecks();
+    startSleepAlarmLoop();
+    loadSleep();
     showView('dashboard');
   } catch {
     localStorage.removeItem('token');
@@ -877,6 +889,17 @@ function setupCalendar() {
   updateHolidayToggle();
 }
 
+function replayCalendarHeaderAnimation() {
+  const header = document.querySelector('.calendar-header');
+  const grid = document.getElementById('calendarGrid');
+  [header, grid].forEach((el) => {
+    if (!el) return;
+    el.classList.remove('cal-replay');
+    void el.offsetWidth;
+    el.classList.add('cal-replay');
+  });
+}
+
 function navigateCalendar(direction) {
   if (calendarViewMode === 'month') {
     calendarDate.setMonth(calendarDate.getMonth() + direction);
@@ -888,6 +911,7 @@ function navigateCalendar(direction) {
     calendarDate.setDate(calendarDate.getDate() + direction);
   }
   renderCalendar();
+  replayCalendarHeaderAnimation();
 }
 
 async function loadCalendar() {
@@ -1734,27 +1758,301 @@ function setupTimer() {
 
 async function loadSleep() {
   try {
-    const schedule = await api('/sleep');
-    document.getElementById('sleepBedtime').value = schedule.bedtime;
-    document.getElementById('sleepWake').value = schedule.wake_time;
-    document.getElementById('sleepEnabled').checked = Boolean(schedule.enabled);
+    sleepSchedule = await api('/sleep');
+    document.getElementById('sleepBedtime').value = sleepSchedule.bedtime;
+    document.getElementById('sleepWake').value = sleepSchedule.wake_time;
+    document.getElementById('sleepEnabled').checked = Boolean(sleepSchedule.enabled);
+    updateSleepAlarmDisplay();
   } catch {}
 }
 
 function setupSleep() {
+  document.querySelectorAll('.preset-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.getElementById('sleepBedtime').value = btn.dataset.bed;
+      document.getElementById('sleepWake').value = btn.dataset.wake;
+      document.getElementById('sleepEnabled').checked = true;
+      const form = document.getElementById('sleepForm');
+      if (form.requestSubmit) form.requestSubmit();
+      else form.dispatchEvent(new Event('submit', { cancelable: true }));
+    });
+  });
+
   document.getElementById('sleepForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const bedtime = document.getElementById('sleepBedtime').value;
     const wake_time = document.getElementById('sleepWake').value;
     const enabled = document.getElementById('sleepEnabled').checked;
     try {
-      await api('/sleep', {
+      sleepSchedule = await api('/sleep', {
         method: 'PUT',
-        body: JSON.stringify({ bedtime, wake_time, enabled })
+        body: { bedtime, wake_time, enabled }
       });
+      sleepAlarmTriggeredToday = null;
+      sleepSnoozeUntil = null;
+      updateSleepAlarmDisplay();
       showMessage('Sleep schedule saved', 'success');
     } catch {}
   });
+
+  document.getElementById('wakeAlarmStop').addEventListener('click', () => {
+    stopSleepAlarmSound();
+    document.getElementById('wakeAlarmOverlay').classList.add('hidden');
+  });
+
+  document.getElementById('wakeAlarmSnooze').addEventListener('click', () => {
+    stopSleepAlarmSound();
+    sleepSnoozeUntil = new Date(Date.now() + 5 * 60 * 1000);
+    updateSleepAlarmDisplay();
+  });
+}
+
+/* ---------- Sleep alarm helpers ---------- */
+
+function getNextSleepTime(timeStr) {
+  const now = new Date();
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0, 0);
+  if (next <= now) {
+    next.setDate(next.getDate() + 1);
+  }
+  return next;
+}
+
+function startSleepAlarmLoop() {
+  if (sleepAlarmInterval) clearInterval(sleepAlarmInterval);
+  updateSleepAlarmDisplay();
+  sleepAlarmInterval = setInterval(() => {
+    updateSleepAlarmDisplay();
+    checkSleepAlarm();
+  }, 1000);
+}
+
+function stopSleepAlarm() {
+  if (sleepAlarmInterval) {
+    clearInterval(sleepAlarmInterval);
+    sleepAlarmInterval = null;
+  }
+  stopSleepAlarmSound();
+}
+
+function getSleepDurationText(bedtime, wakeTime) {
+  const [bedH, bedM] = bedtime.split(':').map(Number);
+  const [wakeH, wakeM] = wakeTime.split(':').map(Number);
+  let bedMinutes = bedH * 60 + bedM;
+  let wakeMinutes = wakeH * 60 + wakeM;
+  if (wakeMinutes <= bedMinutes) wakeMinutes += 24 * 60;
+  const diff = wakeMinutes - bedMinutes;
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  return `${h}h ${m}m`;
+}
+
+function updateSleepAlarmDisplay() {
+  const countdownEl = document.getElementById('sleepCountdown');
+  const nextWakeEl = document.getElementById('sleepNextWake');
+  const durationEl = document.getElementById('sleepDuration');
+  const bedtimeCountdownEl = document.getElementById('bedtimeCountdown');
+  const nextBedtimeEl = document.getElementById('sleepNextBedtime');
+  const alarmStatusEl = document.getElementById('alarmStatus');
+  const alarmStatusSubEl = document.getElementById('alarmStatusSub');
+
+  const now = new Date();
+
+  if (!sleepSchedule) {
+    if (countdownEl) countdownEl.textContent = '--:--:--';
+    if (bedtimeCountdownEl) bedtimeCountdownEl.textContent = '--:--:--';
+    if (durationEl) durationEl.textContent = '--';
+    if (alarmStatusEl) alarmStatusEl.textContent = '--';
+    if (nextWakeEl) nextWakeEl.textContent = 'Set a wake time';
+    if (nextBedtimeEl) nextBedtimeEl.textContent = 'Set a bedtime';
+    return;
+  }
+
+  const wakeTarget = sleepSnoozeUntil || getNextSleepTime(sleepSchedule.wake_time);
+  let wakeDiff = Math.max(0, Math.floor((wakeTarget - now) / 1000));
+  if (sleepSnoozeUntil && now >= sleepSnoozeUntil) wakeDiff = 0;
+
+  if (countdownEl) countdownEl.textContent = formatDuration(wakeDiff);
+  if (nextWakeEl) {
+    nextWakeEl.textContent = `Next alarm: ${wakeTarget.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  if (sleepSchedule.bedtime) {
+    const bedTarget = getNextSleepTime(sleepSchedule.bedtime);
+    const bedDiff = Math.max(0, Math.floor((bedTarget - now) / 1000));
+    if (bedtimeCountdownEl) bedtimeCountdownEl.textContent = formatDuration(bedDiff);
+    if (nextBedtimeEl) {
+      nextBedtimeEl.textContent = `Bedtime: ${bedTarget.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    }
+  }
+
+  if (durationEl && sleepSchedule.bedtime && sleepSchedule.wake_time) {
+    durationEl.textContent = getSleepDurationText(sleepSchedule.bedtime, sleepSchedule.wake_time);
+  }
+
+  if (alarmStatusEl) {
+    const enabled = Boolean(sleepSchedule.enabled);
+    alarmStatusEl.textContent = enabled ? 'ON' : 'OFF';
+    alarmStatusEl.className = 'stat-value ' + (enabled ? 'status-on' : 'status-off');
+  }
+  if (alarmStatusSubEl) {
+    alarmStatusSubEl.textContent = Boolean(sleepSchedule.enabled) ? 'alarm will sound' : 'alarm disabled';
+  }
+
+  updateSleepTimeline();
+}
+
+function sleepMinutesFromMidnight(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function updateSleepTimeline() {
+  const currentTimeEl = document.getElementById('currentTime');
+  const sleepBar = document.getElementById('timelineSleep');
+  const nowMarker = document.getElementById('timelineNow');
+  const bedMarker = document.getElementById('markerBedtime');
+  const wakeMarker = document.getElementById('markerWake');
+  const bedTimeEl = document.getElementById('markerBedtimeTime');
+  const wakeTimeEl = document.getElementById('markerWakeTime');
+
+  const now = new Date();
+  if (currentTimeEl) {
+    currentTimeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  if (!sleepSchedule || !sleepSchedule.bedtime || !sleepSchedule.wake_time) {
+    if (sleepBar) sleepBar.style.width = '0%';
+    if (nowMarker) nowMarker.style.left = '0%';
+    if (bedMarker) bedMarker.style.left = '0%';
+    if (wakeMarker) wakeMarker.style.left = '0%';
+    return;
+  }
+
+  const bedMin = sleepMinutesFromMidnight(sleepSchedule.bedtime);
+  const wakeMin = sleepMinutesFromMidnight(sleepSchedule.wake_time);
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  let displayWakeMin = wakeMin;
+  let displayBedMin = bedMin;
+  if (wakeMin <= bedMin) displayWakeMin += 24 * 60;
+
+  const windowStart = displayBedMin;
+  const windowEnd = displayWakeMin;
+  const windowMinutes = windowEnd - windowStart;
+
+  const nowPos = ((nowMin + 24 * 60 - bedMin) % (24 * 60)) / (24 * 60) * 100;
+  const bedPos = 0;
+  const wakePos = Math.min(100, (windowMinutes / (24 * 60)) * 100);
+
+  if (sleepBar) {
+    sleepBar.style.left = `${bedPos}%`;
+    sleepBar.style.width = `${wakePos - bedPos}%`;
+  }
+  if (nowMarker) nowMarker.style.left = `${Math.max(0, Math.min(100, nowPos))}%`;
+  if (bedMarker) bedMarker.style.left = `${bedPos}%`;
+  if (wakeMarker) wakeMarker.style.left = `${wakePos}%`;
+  if (bedTimeEl) bedTimeEl.textContent = sleepSchedule.bedtime;
+  if (wakeTimeEl) wakeTimeEl.textContent = sleepSchedule.wake_time;
+}
+
+function checkSleepAlarm() {
+  if (!sleepSchedule || !sleepSchedule.enabled || !sleepSchedule.wake_time) return;
+
+  const now = new Date();
+  const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
+  if (sleepSnoozeUntil && now >= sleepSnoozeUntil) {
+    triggerSleepAlarm();
+    return;
+  }
+
+  if (sleepAlarmTriggeredToday === todayKey) return;
+
+  const [hours, minutes] = sleepSchedule.wake_time.split(':').map(Number);
+  if (now.getHours() === hours && now.getMinutes() === minutes) {
+    sleepAlarmTriggeredToday = todayKey;
+    triggerSleepAlarm();
+  }
+}
+
+function triggerSleepAlarm() {
+  const overlay = document.getElementById('wakeAlarmOverlay');
+  const timeEl = document.getElementById('wakeAlarmTime');
+  overlay.classList.remove('hidden');
+  timeEl.textContent = `It's ${new Date().toLocaleTimeString()} — time to wake up!`;
+  sleepSnoozeUntil = null;
+  playSleepAlarmSound();
+}
+
+function playSleepAlarmSound() {
+  try {
+    if (!sleepAlarmAudioCtx) {
+      sleepAlarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (sleepAlarmAudioCtx.state === 'suspended') {
+      sleepAlarmAudioCtx.resume();
+    }
+
+    const now = sleepAlarmAudioCtx.currentTime;
+    const duration = 0.6;
+
+    const osc1 = sleepAlarmAudioCtx.createOscillator();
+    const osc2 = sleepAlarmAudioCtx.createOscillator();
+    const gain = sleepAlarmAudioCtx.createGain();
+
+    osc1.type = 'square';
+    osc2.type = 'sawtooth';
+
+    osc1.frequency.setValueAtTime(880, now);
+    osc1.frequency.setValueAtTime(1318.5, now + 0.15);
+    osc1.frequency.setValueAtTime(880, now + 0.3);
+    osc1.frequency.setValueAtTime(1318.5, now + 0.45);
+
+    osc2.frequency.setValueAtTime(880, now);
+    osc2.frequency.setValueAtTime(1318.5, now + 0.15);
+    osc2.frequency.setValueAtTime(880, now + 0.3);
+    osc2.frequency.setValueAtTime(1318.5, now + 0.45);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.5, now + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(sleepAlarmAudioCtx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+
+    sleepAlarmOscillator = osc1;
+
+    osc1.onended = () => {
+      if (!document.getElementById('wakeAlarmOverlay').classList.contains('hidden')) {
+        setTimeout(playSleepAlarmSound, 250);
+      }
+    };
+  } catch (err) {
+    console.error('Audio alarm error:', err);
+  }
+}
+
+function stopSleepAlarmSound() {
+  sleepSnoozeUntil = null;
+  try {
+    if (sleepAlarmOscillator) {
+      sleepAlarmOscillator.onended = null;
+      sleepAlarmOscillator.stop();
+    }
+    if (sleepAlarmAudioCtx) sleepAlarmAudioCtx.close();
+  } catch {
+    // ignore
+  }
+  sleepAlarmOscillator = null;
+  sleepAlarmAudioCtx = null;
 }
 
 async function loadFriends() {
@@ -2327,6 +2625,18 @@ function toDatetimeLocal(dateStr) {
   const offset = d.getTimezoneOffset();
   const local = new Date(d.getTime() - offset * 60000);
   return local.toISOString().slice(0, 16);
+}
+
+function formatNumber(n) {
+  return String(n).padStart(2, '0');
+}
+
+function formatDuration(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) return `${h}:${formatNumber(m)}:${formatNumber(s)}`;
+  return `${formatNumber(m)}:${formatNumber(s)}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
