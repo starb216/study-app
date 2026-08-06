@@ -93,12 +93,13 @@ router.delete('/session/:id', auth, async (req, res) => {
 router.get('/sessions', auth, async (req, res) => {
   try {
     const sessions = await all(
-      'SELECT * FROM study_sessions WHERE user_id = ? ORDER BY ended_at DESC',
+      'SELECT * FROM study_sessions WHERE user_id = ? ORDER BY id DESC LIMIT 1000',
       [req.userId]
     );
     res.json(sessions);
   } catch (err) {
     console.error('Get sessions error:', err.message);
+    console.error(err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 });

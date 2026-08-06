@@ -65,10 +65,10 @@
   --cal-task-text: #166534;
   --cal-task-border: #22c55e;
   --cal-task-completed-opacity: 0.6;
-  --cal-shape-default: #d8ddd8;
-  --cal-shape-school: #a8d5c3;
-  --cal-shape-family: #f4c2c2;
-  --cal-shape-work: #f3e5ab;
+  --cal-shape-default: #e5e5e5;
+  --cal-shape-school: #a2d9ff;
+  --cal-shape-family: #ffb6c1;
+  --cal-shape-work: #ffe066;
 }
 
 [data-theme="pink"] {
@@ -94,9 +94,9 @@
   --cal-task-text: #6b21a8;
   --cal-task-border: #a855f7;
   --cal-shape-default: #e5e0e2;
-  --cal-shape-school: #d4b8c4;
-  --cal-shape-family: #f4c2c2;
-  --cal-shape-work: #f3e5ab;
+  --cal-shape-school: #a2d9ff;
+  --cal-shape-family: #ffb6c1;
+  --cal-shape-work: #ffe066;
 }
 
 [data-theme="blue"] {
@@ -122,9 +122,9 @@
   --cal-task-text: #166534;
   --cal-task-border: #22c55e;
   --cal-shape-default: #d8dde2;
-  --cal-shape-school: #a8d5c3;
-  --cal-shape-family: #f4c2c2;
-  --cal-shape-work: #f3e5ab;
+  --cal-shape-school: #a2d9ff;
+  --cal-shape-family: #ffb6c1;
+  --cal-shape-work: #ffe066;
 }
 
 [data-theme="yellow"] {
@@ -150,9 +150,9 @@
   --cal-task-text: #166534;
   --cal-task-border: #22c55e;
   --cal-shape-default: #e0dcd2;
-  --cal-shape-school: #a8d5c3;
-  --cal-shape-family: #f4c2c2;
-  --cal-shape-work: #f3e5ab;
+  --cal-shape-school: #a2d9ff;
+  --cal-shape-family: #ffb6c1;
+  --cal-shape-work: #ffe066;
 }
 
 [data-theme="grey"] {
@@ -178,9 +178,9 @@
   --cal-task-text: #166534;
   --cal-task-border: #22c55e;
   --cal-shape-default: #d1d5db;
-  --cal-shape-school: #a8d5c3;
-  --cal-shape-family: #f4c2c2;
-  --cal-shape-work: #f3e5ab;
+  --cal-shape-school: #a2d9ff;
+  --cal-shape-family: #ffb6c1;
+  --cal-shape-work: #ffe066;
 }
 
 [data-theme="dark"] {
@@ -206,9 +206,9 @@
   --cal-task-text: #a8e6b8;
   --cal-task-border: #4ade80;
   --cal-shape-default: #4a524a;
-  --cal-shape-school: #2d5a48;
-  --cal-shape-family: #5a3a3a;
-  --cal-shape-work: #5a502a;
+  --cal-shape-school: #1a4a6e;
+  --cal-shape-family: #6a2d3d;
+  --cal-shape-work: #6a561a;
 }
 
 /* ---------- 2. Base & Reset ---------- */
@@ -1258,6 +1258,7 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding-top: 2.5rem;
 }
 
 .holiday-toggle {
@@ -1274,6 +1275,23 @@ button {
 }
 
 .holiday-toggle:hover {
+  background: var(--bg);
+}
+
+.learn-more-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 2px solid var(--text);
+  background: var(--card);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.learn-more-btn:hover {
   background: var(--bg);
 }
 
@@ -1822,6 +1840,100 @@ button {
   background: var(--bg);
 }
 
+.instructions-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1001;
+  padding: 20px;
+}
+
+.instructions-overlay.active {
+  display: flex;
+}
+
+.instructions-box {
+  background: var(--card);
+  border: 2px solid var(--text);
+  border-radius: 22px;
+  width: 92%;
+  max-width: 720px;
+  max-height: 88vh;
+  overflow-y: auto;
+  padding: 28px 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.instructions-box h2 {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 18px;
+}
+
+.instructions-box h3 {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 18px 0 8px;
+}
+
+.instructions-box p,
+.instructions-box li {
+  font-size: 14px;
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+.instructions-box ul {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.instructions-box code {
+  background: var(--secondary);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.instructions-close {
+  display: block;
+  margin: 20px auto 0;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 800;
+  border: 2px solid var(--text);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.instructions-close:hover {
+  background: var(--bg);
+}
+
+.shape-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0 16px;
+  font-size: 13px;
+}
+
+.shape-table th,
+.shape-table td {
+  border: 2px solid var(--text);
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.shape-table th {
+  background: var(--secondary);
+  font-weight: 800;
+}
+
 @media (max-width: 768px) {
   .visual-calendar-card {
     grid-template-columns: 1fr;
@@ -1835,6 +1947,12 @@ button {
   .holiday-toggle {
     position: static;
     align-self: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  .learn-more-btn {
+    position: static;
+    align-self: flex-start;
     margin-bottom: 1rem;
   }
 }

@@ -12,47 +12,53 @@ function convertPlaceholders(sql) {
 
 function run(sql, params = []) {
   return new Promise(async (resolve, reject) => {
+    let client;
     try {
       let pgSql = convertPlaceholders(sql);
       // PostgreSQL needs RETURNING to get inserted id like sqlite3's lastID
       if (/^\s*INSERT\s+/i.test(pgSql) && !/RETURNING/i.test(pgSql)) {
         pgSql += ' RETURNING id';
       }
-      const client = await pool.connect();
+      client = await pool.connect();
       const result = await client.query(pgSql, params);
-      client.release();
       resolve({
         lastID: result.rows[0]?.id ? Number(result.rows[0].id) : 0,
         changes: result.rowCount || 0
       });
     } catch (err) {
       reject(err);
+    } finally {
+      if (client) client.release();
     }
   });
 }
 
 function get(sql, params = []) {
   return new Promise(async (resolve, reject) => {
+    let client;
     try {
-      const client = await pool.connect();
+      client = await pool.connect();
       const result = await client.query(convertPlaceholders(sql), params);
-      client.release();
       resolve(result.rows[0]);
     } catch (err) {
       reject(err);
+    } finally {
+      if (client) client.release();
     }
   });
 }
 
 function all(sql, params = []) {
   return new Promise(async (resolve, reject) => {
+    let client;
     try {
-      const client = await pool.connect();
+      client = await pool.connect();
       const result = await client.query(convertPlaceholders(sql), params);
-      client.release();
       resolve(result.rows);
     } catch (err) {
       reject(err);
+    } finally {
+      if (client) client.release();
     }
   });
 }
@@ -127,6 +133,13 @@ async function init() {
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )
   `);
+
+  // Index to keep session lookups fast for active users
+  try {
+    await run('CREATE INDEX IF NOT EXISTS idx_study_sessions_user_id ON study_sessions(user_id)');
+  } catch (err) {
+    console.warn('Could not create study_sessions index:', err.message);
+  }
 
   await run(`
     CREATE TABLE IF NOT EXISTS sleep_schedules (
