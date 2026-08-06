@@ -29,13 +29,21 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-db.init()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Study app server running on http://localhost:${PORT}`);
-    });
-  })
-  .catch((err) => {
+async function init() {
+  try {
+    await db.init();
+    if (require.main === module) {
+      app.listen(PORT, () => {
+        console.log(`Study app server running on http://localhost:${PORT}`);
+      });
+    }
+  } catch (err) {
     console.error('Failed to initialize database:', err.message);
-    process.exit(1);
-  });
+    if (require.main === module) process.exit(1);
+    throw err;
+  }
+}
+
+const initPromise = init();
+
+module.exports = { app, initPromise };

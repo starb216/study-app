@@ -11,6 +11,108 @@ let timerSessionId = null;
 let timerPendingAward = null;
 let notifyInterval = null;
 let calendarViewMode = 'month';
+let visualSelectedDate = new Date();
+let visualShowReligious = localStorage.getItem('cal_show_religious') === 'true';
+let visualPendingDate = null;
+let visualCurrentAlarm = null;
+let alarmAudioCtx = null;
+let alarmOsc = null;
+let alarmInterval = null;
+let alarmCheckInterval = null;
+let hideCompletedItems = localStorage.getItem('cal_hide_completed') === 'true';
+let currentTheme = localStorage.getItem('study_app_theme') || '';
+const triggeredAlarms = new Set();
+
+const KEY_OCCASIONS = 'cal_occasions';
+const KEY_REMINDERS = 'cal_reminders';
+const KEY_MOODS = 'cal_moods';
+const KEY_SHOW_RELIGIOUS = 'cal_show_religious';
+
+const SCHOOL_WORDS = ['homework', 'meeting', 'exam', 'class', 'test', 'project', 'assignment', 'study', 'studying', 'presentation', 'school', 'lecture', 'quiz', 'course', 'deadline'];
+const FAMILY_WORDS = ['family', 'birthday', 'anniversary', 'mother', 'father', 'mom', 'dad', 'brother', 'sister', 'grandma', 'grandpa', 'love', 'commemoration', 'memorial', 'holiday', 'wedding', 'reunion'];
+const WORK_WORDS = ['work', 'job', 'deadline', 'client', 'meeting', 'presentation', 'report', 'office', 'shift', 'interview', 'proposal', 'contract', 'project', 'task', 'deadline'];
+
+const SHAPE_PATHS = {
+  school: 'M54.3 12.5 L80.7 27.5 Q85 30 85 35 L85 65 Q85 70 80.7 72.5 L54.3 87.5 Q50 90 45.7 87.5 L19.3 72.5 Q15 70 15 65 L15 35 Q15 30 19.3 27.5 L45.7 12.5 Q50 10 54.3 12.5 Z',
+  family: 'M50 88 C28 72 8 58 8 38 C8 24 18 14 32 14 C40 14 46 18 50 24 C54 18 60 14 68 14 C82 14 92 24 92 38 C92 58 72 72 50 88 Z',
+  work: 'M60.6 35.4 Q95.7 35.2 67.1 55.6 Q78.2 88.8 50 68 Q21.8 88.8 32.9 55.6 Q4.4 35.2 39.4 35.4 Q50 2.0 60.6 35.4 Z'
+};
+
+function getLocalMap(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || {}; }
+  catch { return {}; }
+}
+
+function setLocalMap(key, map) {
+  localStorage.setItem(key, JSON.stringify(map));
+}
+
+function nthWeekday(year, month, n, weekday) {
+  const first = new Date(year, month, 1).getDay();
+  const day = 1 + (weekday - first + 7) % 7 + (n - 1) * 7;
+  return day;
+}
+
+function lastWeekday(year, month, weekday) {
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const lastDow = new Date(year, month, lastDay).getDay();
+  const day = lastDay - (lastDow - weekday + 7) % 7;
+  return day;
+}
+
+function getEaster(year) {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return { m: month, d: day };
+}
+
+function getHoliday(date) {
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
+  const fixed = [
+    { m: 0, d: 1, name: "New Year's Day" },
+    { m: 3, d: 1, name: "April Fools' Day" },
+    { m: 4, d: 5, name: "Cinco de Mayo" },
+    { m: 5, d: 19, name: "Juneteenth" },
+    { m: 6, d: 4, name: "Independence Day" },
+    { m: 9, d: 31, name: "Halloween" },
+    { m: 10, d: 11, name: "Veterans Day" },
+    { m: 11, d: 31, name: "New Year's Eve" }
+  ];
+  const religious = [
+    { m: 1, d: 14, name: "Valentine's Day" },
+    { m: 2, d: 17, name: "St. Patrick's Day" },
+    { m: 7, d: 15, name: "Assumption of Mary" },
+    { m: 11, d: 24, name: "Christmas Eve" },
+    { m: 11, d: 25, name: "Christmas Day" }
+  ];
+  for (const h of fixed) if (h.m === m && h.d === d) return h.name;
+  if (visualShowReligious) {
+    for (const h of religious) if (h.m === m && h.d === d) return h.name;
+    const easter = getEaster(y);
+    if (m === easter.m && d === easter.d) return "Easter Sunday";
+  }
+  if (m === 0 && d === nthWeekday(y, 0, 3, 1)) return "MLK Jr. Day";
+  if (m === 1 && d === nthWeekday(y, 1, 3, 1)) return "Presidents' Day";
+  if (m === 4 && d === lastWeekday(y, 4, 1)) return "Memorial Day";
+  if (m === 8 && d === nthWeekday(y, 8, 1, 1)) return "Labor Day";
+  if (m === 9 && d === nthWeekday(y, 9, 2, 1)) return "Indigenous Peoples' Day";
+  if (m === 10 && d === nthWeekday(y, 10, 4, 4)) return "Thanksgiving";
+  return '';
+}
 
 function getToken() {
   return localStorage.getItem('token');
@@ -59,6 +161,7 @@ function setUser(user, token) {
   updateAdminNav();
   requestNotificationPermission();
   startNotificationChecks();
+  startAlarmChecks();
 }
 
 function updateAdminNav() {
@@ -212,6 +315,7 @@ async function initAuth() {
     updateAdminNav();
     requestNotificationPermission();
     startNotificationChecks();
+    startAlarmChecks();
     showView('dashboard');
   } catch {
     localStorage.removeItem('token');
@@ -288,6 +392,25 @@ async function loadSettings() {
     document.getElementById('settingsUsername').value = user.username;
     document.getElementById('settingsEmail').value = user.email;
   } catch {}
+}
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  if (theme) {
+    document.documentElement.dataset.theme = theme;
+  } else {
+    delete document.documentElement.dataset.theme;
+  }
+  localStorage.setItem('study_app_theme', theme);
+}
+
+function setupTheme() {
+  const select = document.getElementById('themeSelect');
+  if (!select) return;
+  select.value = currentTheme;
+  select.addEventListener('change', (e) => {
+    applyTheme(e.target.value);
+  });
 }
 
 function setupSettings() {
@@ -697,6 +820,61 @@ function setupCalendar() {
       } catch {}
     }
   });
+
+  // Visual calendar local features
+  document.getElementById('occasionsInput').addEventListener('input', () => {
+    const map = getLocalMap(KEY_OCCASIONS);
+    map[dateKey(visualSelectedDate)] = document.getElementById('occasionsInput').value;
+    setLocalMap(KEY_OCCASIONS, map);
+    renderCalendar();
+  });
+
+  document.getElementById('addReminder').addEventListener('click', () => {
+    const reminderList = document.getElementById('reminderList');
+    reminderList.appendChild(createReminderRow());
+    reminderList.lastElementChild.querySelector('.reminder-input').focus();
+  });
+
+  document.getElementById('holidayToggle').addEventListener('click', () => {
+    visualShowReligious = !visualShowReligious;
+    localStorage.setItem(KEY_SHOW_RELIGIOUS, visualShowReligious);
+    updateHolidayToggle();
+    renderCalendar();
+  });
+
+  document.getElementById('hideCompleted').addEventListener('change', (e) => {
+    hideCompletedItems = e.target.checked;
+    localStorage.setItem('cal_hide_completed', hideCompletedItems);
+    renderCalendar();
+  });
+  document.getElementById('hideCompleted').checked = hideCompletedItems;
+
+  document.getElementById('moodReminder').addEventListener('click', () => openMoodPicker(visualSelectedDate));
+  document.querySelectorAll('.mood-options button').forEach((btn) => {
+    btn.addEventListener('click', () => closeMoodPicker(btn.dataset.mood));
+  });
+  document.getElementById('moodOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('moodOverlay')) closeMoodPicker(null);
+  });
+  document.getElementById('moodGoBack').addEventListener('click', () => closeMoodPicker(null));
+
+  document.getElementById('closeAlarm').addEventListener('click', () => {
+    stopAlarmSound();
+    document.getElementById('alarmOverlay').classList.remove('active');
+    if (visualCurrentAlarm && visualCurrentAlarm.isReminder) {
+      const map = getLocalMap(KEY_REMINDERS);
+      const list = map[visualCurrentAlarm.key] || [];
+      const updated = list.filter((r) => r.text.trim() !== visualCurrentAlarm.text.trim());
+      if (updated.length === 0) delete map[visualCurrentAlarm.key];
+      else map[visualCurrentAlarm.key] = updated;
+      setLocalMap(KEY_REMINDERS, map);
+      loadReminders();
+      renderCalendar();
+    }
+    visualCurrentAlarm = null;
+  });
+
+  updateHolidayToggle();
 }
 
 function navigateCalendar(direction) {
@@ -713,7 +891,9 @@ function navigateCalendar(direction) {
 }
 
 async function loadCalendar() {
+  visualSelectedDate = new Date();
   await renderCalendar();
+  updateVisualDisplay();
 }
 
 function dateKey(d) {
@@ -775,52 +955,449 @@ function renderMonthCalendar(events, tasks) {
 
   const prevLastDay = new Date(year, month, 0).getDate();
   for (let i = startPadding - 1; i >= 0; i--) {
-    const div = document.createElement('div');
-    div.className = 'calendar-cell other-month';
-    div.textContent = prevLastDay - i;
-    grid.appendChild(div);
+    grid.appendChild(createVisualDayCell(year, month, prevLastDay - i, true, events, tasks));
   }
 
-  const today = new Date();
-
-  // Group items by date
-  const itemsByDate = {};
-  events.forEach((e) => {
-    const key = e.event_date.slice(0, 10);
-    if (!itemsByDate[key]) itemsByDate[key] = [];
-    itemsByDate[key].push({ type: 'event', title: e.title, time: formatTime(new Date(e.event_date)) });
-  });
-  tasks.forEach((t) => {
-    if (!t.due_date) return;
-    if (!itemsByDate[t.due_date]) itemsByDate[t.due_date] = [];
-    itemsByDate[t.due_date].push({ type: 'task', title: t.title, completed: t.completed });
-  });
-
   for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const div = document.createElement('div');
-    div.className = 'calendar-cell';
-    if (dateStr === dateKey(today)) div.classList.add('today');
-
-    const items = itemsByDate[dateStr] || [];
-    const itemsHtml = items.slice(0, 3).map((item) => {
-      const cls = item.type === 'event' ? 'month-item event' : `month-item task${item.completed ? ' completed' : ''}`;
-      const label = item.type === 'event' ? `${item.time} ${item.title}` : item.title;
-      return `<div class="${cls}">${escapeHtml(label)}</div>`;
-    }).join('');
-    const more = items.length > 3 ? `<div class="month-item more">+${items.length - 3} more</div>` : '';
-
-    div.innerHTML = `<span class="cell-date">${day}</span>${itemsHtml}${more}`;
-    grid.appendChild(div);
+    grid.appendChild(createVisualDayCell(year, month, day, false, events, tasks));
   }
 
   const remainingCells = (7 - ((startPadding + daysInMonth) % 7)) % 7;
   for (let i = 1; i <= remainingCells; i++) {
-    const div = document.createElement('div');
-    div.className = 'calendar-cell other-month';
-    div.textContent = i;
-    grid.appendChild(div);
+    grid.appendChild(createVisualDayCell(year, month, i, true, events, tasks));
   }
+}
+
+function createVisualDayCell(year, month, day, other, events, tasks) {
+  const cellDate = new Date(year, month, day);
+  const today = new Date();
+  const isToday = !other && day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+  const isSelected = !other && day === visualSelectedDate.getDate() && month === visualSelectedDate.getMonth() && year === visualSelectedDate.getFullYear();
+  const key = dateKey(cellDate);
+  const occasions = getLocalMap(KEY_OCCASIONS);
+  const moods = getLocalMap(KEY_MOODS);
+  const rawText = (occasions[key] || '').trim();
+  const occasionText = rawText.toLowerCase();
+  const hasOccasion = !!occasionText;
+  const isSchool = hasOccasion && SCHOOL_WORDS.some((w) => occasionText.includes(w));
+  const isFamily = hasOccasion && FAMILY_WORDS.some((w) => occasionText.includes(w));
+  const isWork = hasOccasion && WORK_WORDS.some((w) => occasionText.includes(w));
+  const isPast = !other && cellDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const moodEmoji = moods[key] || '';
+  const holidayName = !other ? getHoliday(cellDate) : '';
+
+  const cell = document.createElement('div');
+  const type = isSchool ? 'school' : isFamily ? 'family' : isWork ? 'work' : '';
+  cell.className = 'calendar-day' +
+    (other ? ' other-month' : '') +
+    (isToday ? ' today' : '') +
+    (isSelected ? ' selected' : '') +
+    (hasOccasion ? ' has-occasion' : '') +
+    (isSchool ? ' school-day' : '') +
+    (isFamily ? ' family-day' : '') +
+    (isWork ? ' work-day' : '') +
+    (isPast ? ' past-day' : '');
+
+  const badge = moodEmoji ? `<span class="mood-badge">${moodEmoji}</span>` : '';
+  const holiday = holidayName ? `<span class="holiday-label">${holidayName.replace(/</g, '&lt;')}</span>` : '';
+
+  const now = new Date();
+  const dayEvents = events.filter((e) => isSameDay(new Date(e.event_date), cellDate));
+  const dayTasks = tasks.filter((t) => t.due_date === key);
+  const hasIncompleteTasks = dayTasks.some((t) => !t.completed);
+  const statusTag = isPast && !other
+    ? (hasIncompleteTasks ? '<span class="incomplete-tag">Incomplete</span>' : '<span class="finished-tag">Finished</span>')
+    : '';
+
+  const chips = [];
+  dayEvents.forEach((e) => {
+    const end = new Date(new Date(e.event_date).getTime() + (e.duration_minutes || 60) * 60000);
+    if (hideCompletedItems && end < now) return;
+    chips.push({ type: 'event', cls: 'event', text: `${formatTime(new Date(e.event_date))} ${e.title}` });
+  });
+  dayTasks.forEach((t) => {
+    if (hideCompletedItems && t.completed) return;
+    chips.push({ type: 'task', id: t.id, cls: t.completed ? 'task completed' : 'task', text: t.title });
+  });
+
+  let chipsHtml = '';
+  if (chips.length > 0) {
+    const visible = chips.slice(0, 2);
+    const more = chips.length > 2 ? `<div class="calendar-day-chip more">+${chips.length - 2}</div>` : '';
+    chipsHtml = `<div class="calendar-day-chips">${visible.map((c) => {
+      const dataAttr = c.type === 'task' ? ` data-id="${c.id}"` : '';
+      return `<div class="calendar-day-chip ${c.cls}"${dataAttr}>${escapeHtml(c.text)}</div>`;
+    }).join('')}${more}</div>`;
+  }
+
+  if (type && !other) {
+    const uid = 'sp-' + Math.random().toString(36).slice(2, 9);
+    const numY = isPast ? 62 : 54;
+    cell.innerHTML = `
+      <svg class="shape-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <defs><path id="${uid}" d="${SHAPE_PATHS[type]}" /></defs>
+        <use href="#${uid}" class="shape-bg" />
+        <text class="day-number-svg" x="50" y="${numY}" text-anchor="middle" dominant-baseline="middle">${day}</text>
+      </svg>
+      ${badge}
+      ${holiday}
+      ${statusTag}
+      ${chipsHtml}
+    `;
+  } else {
+    cell.innerHTML = `${badge}${holiday}${statusTag}${chipsHtml}<span class="day-number">${day}</span>`;
+  }
+
+  if (!other) {
+    cell.addEventListener('click', (e) => {
+      const chip = e.target.closest('.calendar-day-chip.task');
+      if (chip && chip.dataset.id) {
+        e.stopPropagation();
+        toggleTaskCompletion(chip.dataset.id);
+        return;
+      }
+      visualSelectedDate = new Date(year, month, day);
+      updateVisualDisplay();
+      renderCalendar();
+    });
+  }
+
+  return cell;
+}
+
+async function toggleTaskCompletion(taskId) {
+  try {
+    const tasks = await api('/tasks');
+    const task = tasks.find((t) => t.id == taskId);
+    if (!task) return;
+    await api(`/tasks/${taskId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ completed: task.completed ? 0 : 1 })
+    });
+    renderCalendar();
+    showMessage(task.completed ? 'Task marked incomplete' : 'Task completed', 'success');
+  } catch {}
+}
+
+async function updateVisualDisplay() {
+  document.getElementById('displayDate').textContent = visualSelectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('displayYear').textContent = visualSelectedDate.getFullYear();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const sel = new Date(visualSelectedDate.getFullYear(), visualSelectedDate.getMonth(), visualSelectedDate.getDate());
+  const isPast = sel < today;
+
+  let hasIncompleteTasks = false;
+  if (isPast) {
+    try {
+      const tasks = await api('/tasks');
+      const key = dateKey(sel);
+      hasIncompleteTasks = tasks.some((t) => t.due_date === key && !t.completed);
+    } catch {}
+  }
+
+  const finishedLabel = document.getElementById('finishedLabel');
+  finishedLabel.classList.toggle('show', isPast);
+  finishedLabel.textContent = isPast && hasIncompleteTasks ? 'INCOMPLETE' : 'FINISHED';
+
+  document.getElementById('occasionsInput').value = getLocalMap(KEY_OCCASIONS)[dateKey(visualSelectedDate)] || '';
+  loadReminders();
+  updateMoodReminder();
+}
+
+function updateMoodReminder() {
+  const moodReminder = document.getElementById('moodReminder');
+  const mood = getLocalMap(KEY_MOODS)[dateKey(visualSelectedDate)];
+  if (mood) {
+    moodReminder.innerHTML = `Mark your mood: <span style="font-size:14px">${mood}</span> (click the emoji to change)`;
+  } else {
+    moodReminder.innerHTML = `Mark your mood: <span style="font-size:14px">?</span> (click to set)`;
+  }
+}
+
+function openMoodPicker(date) {
+  visualPendingDate = date;
+  document.getElementById('moodOverlay').classList.add('active');
+}
+
+function closeMoodPicker(mood) {
+  document.getElementById('moodOverlay').classList.remove('active');
+  if (!visualPendingDate) return;
+  if (mood === undefined || mood === null) {
+    visualPendingDate = null;
+    return;
+  }
+  const map = getLocalMap(KEY_MOODS);
+  const key = dateKey(visualPendingDate);
+  if (mood && mood !== 'clear') {
+    map[key] = mood;
+  } else {
+    delete map[key];
+  }
+  setLocalMap(KEY_MOODS, map);
+  visualSelectedDate = visualPendingDate;
+  visualPendingDate = null;
+  updateVisualDisplay();
+  renderCalendar();
+}
+
+function getRemindersForDate(date) {
+  const stored = getLocalMap(KEY_REMINDERS)[dateKey(date)];
+  return Array.isArray(stored) ? stored : [];
+}
+
+function saveReminders() {
+  const reminderList = document.getElementById('reminderList');
+  const rows = [...reminderList.querySelectorAll('.reminder-row')];
+  const list = rows.map((row) => ({
+    text: row.querySelector('.reminder-input').value,
+    level: row.querySelector('.reminder-level').value,
+    remark: row.querySelector('.remark-area')?.value || ''
+  })).filter((r) => r.text.trim() !== '');
+  const map = getLocalMap(KEY_REMINDERS);
+  map[dateKey(visualSelectedDate)] = list;
+  setLocalMap(KEY_REMINDERS, map);
+}
+
+function createReminderRow(text = '', level = 'medium', remark = '', compact = false) {
+  const row = document.createElement('div');
+  row.className = 'reminder-row' + (compact ? ' compact' : '');
+  row.innerHTML = `
+    <div class="reminder-compact">
+      <span class="reminder-summary">${text.replace(/</g, '&lt;') || '<span style="color:#999">New reminder</span>'}<span class="remark-dot">${remark ? '📝' : ''}</span></span>
+      <span class="reminder-badge ${level}">${level}</span>
+    </div>
+    <div class="reminder-edit">
+      <div class="reminder-edit-header">
+        <span class="reminder-edit-title">Edit reminder</span>
+        <button class="close-edit" title="Close" type="button">✓</button>
+      </div>
+      <input type="text" class="reminder-input" placeholder="e.g. 9:00 go to eat" value="${text.replace(/"/g, '&quot;')}" />
+      <div class="reminder-controls">
+        <span class="emergency-label">Level of emergency</span>
+        <select class="reminder-level">
+          <option value="low" ${level === 'low' ? 'selected' : ''}>Low</option>
+          <option value="medium" ${level === 'medium' ? 'selected' : ''}>Medium</option>
+          <option value="high" ${level === 'high' ? 'selected' : ''}>High</option>
+        </select>
+        <button class="memo-btn" title="Remarks" type="button">📝</button>
+        <button class="remove-reminder" title="Remove" type="button">×</button>
+      </div>
+      <textarea class="remark-area" placeholder="Any remarks?">${remark.replace(/</g, '&lt;')}</textarea>
+    </div>
+  `;
+  const input = row.querySelector('.reminder-input');
+  const memoBtn = row.querySelector('.memo-btn');
+  const remarkArea = row.querySelector('.remark-area');
+  const compactView = row.querySelector('.reminder-compact');
+  const closeBtn = row.querySelector('.close-edit');
+  const reminderList = document.getElementById('reminderList');
+
+  function expand() {
+    row.classList.remove('compact');
+    input.focus();
+  }
+
+  function collapse() {
+    if (input.value.trim() === '') {
+      row.remove();
+    } else {
+      row.classList.add('compact');
+      row.querySelector('.reminder-summary').innerHTML = `${input.value.replace(/</g, '&lt;')}<span class="remark-dot">${remarkArea.value ? '📝' : ''}</span>`;
+      const badge = row.querySelector('.reminder-badge');
+      badge.textContent = row.querySelector('.reminder-level').value;
+      badge.className = 'reminder-badge ' + row.querySelector('.reminder-level').value;
+    }
+    saveReminders();
+    ensureEmptyReminderRow();
+  }
+
+  compactView.addEventListener('click', expand);
+  closeBtn.addEventListener('click', collapse);
+
+  input.addEventListener('input', () => {
+    saveReminders();
+    if (row === reminderList.lastElementChild && input.value.trim() !== '') {
+      reminderList.appendChild(createReminderRow());
+    }
+  });
+  row.querySelector('.reminder-level').addEventListener('change', saveReminders);
+  remarkArea.addEventListener('input', saveReminders);
+  memoBtn.addEventListener('click', () => {
+    row.classList.toggle('show-remark');
+    if (row.classList.contains('show-remark')) remarkArea.focus();
+  });
+  row.querySelector('.remove-reminder').addEventListener('click', () => {
+    row.remove();
+    if (reminderList.children.length === 0) reminderList.appendChild(createReminderRow());
+    saveReminders();
+    ensureEmptyReminderRow();
+  });
+  return row;
+}
+
+function loadReminders() {
+  const reminderList = document.getElementById('reminderList');
+  reminderList.innerHTML = '';
+  const list = getRemindersForDate(visualSelectedDate);
+  if (list.length === 0) {
+    reminderList.appendChild(createReminderRow());
+  } else {
+    list.forEach((r) => reminderList.appendChild(createReminderRow(r.text, r.level, r.remark, true)));
+  }
+  ensureEmptyReminderRow();
+}
+
+function ensureEmptyReminderRow() {
+  const reminderList = document.getElementById('reminderList');
+  const last = reminderList.lastElementChild;
+  if (!last || last.querySelector('.reminder-input')?.value.trim() !== '') {
+    reminderList.appendChild(createReminderRow());
+  }
+}
+
+function updateHolidayToggle() {
+  document.getElementById('holidayToggle').textContent = `Religious holidays: ${visualShowReligious ? 'on' : 'off'}`;
+}
+
+function startAlarmChecks() {
+  if (alarmCheckInterval) return;
+  checkAlarms();
+  alarmCheckInterval = setInterval(checkAlarms, 1000);
+}
+
+function parseAlarmTime(text) {
+  const m = text.match(/(\d{1,2}):(\d{2})\s?([AaPp][Mm])?|\b(\d{1,2})\s?([AaPp][Mm])\b/);
+  if (!m) return null;
+  let h;
+  let min = 0;
+  let ampm;
+  if (m[1]) {
+    h = parseInt(m[1]);
+    min = parseInt(m[2]);
+    ampm = m[3];
+  } else {
+    h = parseInt(m[4]);
+    ampm = m[5];
+  }
+  if (ampm) {
+    const u = ampm.toUpperCase();
+    if (u === 'PM' && h !== 12) h += 12;
+    if (u === 'AM' && h === 12) h = 0;
+  }
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function checkAlarms() {
+  const now = new Date();
+  const key = dateKey(now);
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+  function scanOccasions(text) {
+    text.split('\n').forEach((line) => {
+      const time = parseAlarmTime(line);
+      if (time && time === currentTime) {
+        const id = `${key}-occ-${time}-${line.trim()}`;
+        if (!triggeredAlarms.has(id)) {
+          triggeredAlarms.add(id);
+          triggerAlarm(line.trim(), '', false, key);
+        }
+      }
+    });
+  }
+
+  scanOccasions(getLocalMap(KEY_OCCASIONS)[key] || '');
+
+  const reminders = getLocalMap(KEY_REMINDERS)[key] || [];
+  reminders.forEach((r) => {
+    const time = parseAlarmTime(r.text);
+    if (time && time === currentTime) {
+      const id = `${key}-rem-${time}-${r.text.trim()}`;
+      if (!triggeredAlarms.has(id)) {
+        triggeredAlarms.add(id);
+        const level = r.level || 'medium';
+        const label = level === 'high' ? 'URGENT' : level === 'low' ? 'Reminder' : 'REMINDER';
+        triggerAlarm(`[${label}] ${r.text.trim()}`, r.remark, true, key, level);
+      }
+    }
+  });
+}
+
+function playAlarmSound(level = 'medium') {
+  try {
+    const settings = {
+      low: { gain: 0.5, tone1: 750, tone2: 950 },
+      medium: { gain: 0.85, tone1: 950, tone2: 1250 },
+      high: { gain: 0.99, tone1: 1200, tone2: 1600 }
+    };
+    const s = settings[level] || settings.medium;
+
+    alarmAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const master = alarmAudioCtx.createGain();
+    master.gain.setValueAtTime(s.gain, alarmAudioCtx.currentTime);
+    master.connect(alarmAudioCtx.destination);
+
+    const tone1 = s.tone1;
+    const tone2 = s.tone2;
+    const beepDuration = 0.08;
+    const motifDuration = 0.62;
+    const totalDuration = 4.0;
+
+    function scheduleBeep(time, freq) {
+      const osc = alarmAudioCtx.createOscillator();
+      const env = alarmAudioCtx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(freq, time);
+      env.gain.setValueAtTime(0, time);
+      env.gain.linearRampToValueAtTime(0.9, time + 0.01);
+      env.gain.exponentialRampToValueAtTime(0.001, time + beepDuration);
+      osc.connect(env);
+      env.connect(master);
+      osc.start(time);
+      osc.stop(time + beepDuration + 0.02);
+    }
+
+    const startTime = alarmAudioCtx.currentTime;
+    for (let t = 0; t < totalDuration; t += motifDuration) {
+      const base = startTime + t;
+      scheduleBeep(base, tone2);
+      scheduleBeep(base + 0.10, tone1);
+      scheduleBeep(base + 0.24, tone2);
+      scheduleBeep(base + 0.34, tone1);
+    }
+
+    alarmInterval = setInterval(() => {
+      const base = alarmAudioCtx.currentTime;
+      for (let t = 0; t < totalDuration; t += motifDuration) {
+        const now = base + t;
+        scheduleBeep(now, tone2);
+        scheduleBeep(now + 0.10, tone1);
+        scheduleBeep(now + 0.24, tone2);
+        scheduleBeep(now + 0.34, tone1);
+      }
+    }, totalDuration * 1000);
+  } catch (err) { console.error('Audio error:', err); }
+}
+
+function stopAlarmSound() {
+  if (alarmInterval) clearInterval(alarmInterval);
+  if (alarmOsc) try { alarmOsc.stop(); } catch {}
+  if (alarmAudioCtx) try { alarmAudioCtx.close(); } catch {}
+  alarmInterval = null;
+  alarmOsc = null;
+  alarmAudioCtx = null;
+}
+
+function triggerAlarm(text, remark = '', isReminder = false, key = '', level = 'medium') {
+  const alarmText = document.getElementById('alarmText');
+  const alarmRemark = document.getElementById('alarmRemark');
+  alarmText.textContent = text || 'Your reminder';
+  alarmRemark.textContent = remark ? `Remarks: ${remark}` : '';
+  alarmRemark.style.display = remark ? 'block' : 'none';
+  visualCurrentAlarm = { text: text.replace(/^\[[^\]]+\]\s*/, ''), isReminder, key };
+  document.getElementById('alarmOverlay').classList.add('active');
+  playAlarmSound(level);
 }
 
 function renderTwoWeeksCalendar(events, tasks) {
@@ -1246,52 +1823,324 @@ function setupFriends() {
   });
 }
 
-let leaderboardMetric = 'points';
-let leaderboardScope = 'global';
+// ---------- New leaderboard ----------
 
 async function loadLeaderboard() {
-  await renderLeaderboard();
-}
-
-async function renderLeaderboard() {
-  let path = '/leaderboard';
-  if (leaderboardMetric === 'streaks' && leaderboardScope === 'friends') path = '/leaderboard/friends/streaks';
-  else if (leaderboardMetric === 'streaks') path = '/leaderboard/streaks';
-  else if (leaderboardScope === 'friends') path = '/leaderboard/friends';
-
   try {
-    const leaders = await api(path);
-    const tbody = document.getElementById('leaderboardBody');
-    const valueHeader = document.getElementById('leaderboardValueHeader');
-    tbody.innerHTML = '';
-
-    const isStreaks = leaderboardMetric === 'streaks';
-    valueHeader.textContent = isStreaks ? 'Streak Days' : 'Shells';
-
-    if (leaders.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="3">No data yet.</td></tr>';
-      return;
-    }
-
-    leaders.forEach((u, i) => {
-      const tr = document.createElement('tr');
-      const value = isStreaks ? `${u.streak || 0} 🔥` : `${u.currency} 🐚`;
-      tr.innerHTML = `<td>${i + 1}</td><td>${escapeHtml(u.username)}</td><td>${value}</td>`;
-      tbody.appendChild(tr);
+    const [globalTop, friends, around] = await Promise.all([
+      api('/leaderboard'),
+      api('/leaderboard/friends'),
+      api('/leaderboard/around')
+    ]);
+    const meId = currentUser ? currentUser.id : null;
+    [globalTop, friends, around].forEach((list) => {
+      if (!Array.isArray(list)) return;
+      list.forEach((u) => { u.me = u.id === meId; });
     });
+    renderLeaderboard(globalTop, friends, around);
   } catch {}
 }
 
-function setupLeaderboard() {
-  document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.leaderboard-tabs .tab-btn').forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      leaderboardMetric = btn.dataset.lbMetric;
-      leaderboardScope = btn.dataset.lbScope;
-      renderLeaderboard();
+function renderLeaderboard(globalTop, friends, around) {
+  const now = new Date();
+  document.getElementById('lbMonthPill').textContent =
+    `${now.toLocaleString('en-US', { month: 'long', year: 'numeric' })} · Monthly`;
+
+  // Podium: global top 3 (display order: 2nd, 1st, 3rd)
+  const podiumOrder = [globalTop[1], globalTop[0], globalTop[2]].filter(Boolean);
+  const MEDALS = ['🥇', '🥈', '🥉'];
+  document.getElementById('lbPodium').innerHTML = podiumOrder.map((f, i) => {
+    const place = globalTop.indexOf(f);
+    const delay = 0.2 + i * 0.15;
+    return `
+      <div class="lb-podium-card ${place === 0 ? 'first' : ''}" style="animation-delay: ${delay}s">
+        <span class="lb-medal">${MEDALS[place]}</span>
+        <div class="lb-avatar">${lbInitials(f.name)}</div>
+        <div class="lb-name">${escapeHtml(f.name)}</div>
+        <div class="lb-score"><span class="lb-count" data-target="${f.points}">0</span> <span class="lb-pts">🌙</span></div>
+        <div class="lb-sub">${f.sessions} sessions · ${f.avgMinutes} min avg · 🔥 ${f.streak}d<br>${f.total.toLocaleString()} 🌙 all-time</div>
+      </div>`;
+  }).join('');
+  lbBindPodiumSparkle();
+
+  // Friends board
+  renderLbFriends(friends);
+
+  // Around You board
+  const aroundRanked = [...around].sort((a, b) => a.rank - b.rank);
+  const aroundMax = lbScore(aroundRanked[0]) || 1;
+  aroundRanked.forEach((f) => {
+    const move = lbLiveTrend(f.name, f.rank, 'global', f.trend);
+    f._trend = move ? move.delta : 0;
+    f._boosted = !!(move && move.boosted);
+    f._ultra = !!(move && move.ultra);
+  });
+  document.getElementById('lbRowsAround').innerHTML = aroundRanked.map((f, i) =>
+    lbRowHtml(f, i, `#${f.rank}`, f.rank <= 3, aroundMax, 0.55 + i * 0.07)
+  ).join('');
+
+  const meGlobal = aroundRanked.find((f) => f.me);
+  if (meGlobal) {
+    document.getElementById('lbGlobalSummary').innerHTML =
+      `Your global rank: <b>#${meGlobal.rank}</b> · the 5 above and 4 below you`;
+  }
+
+  // Header subtitle
+  const headerSub = document.getElementById('lbHeaderSub');
+  if (meGlobal && meGlobal.rank === 1) {
+    headerSub.textContent = "👑 You're the #1 studier on the entire site — everyone else is chasing you.";
+  } else if (meGlobal && meGlobal.rank === 2) {
+    headerSub.textContent = "You're #2 on the entire site — one good session from the crown.";
+  } else {
+    headerSub.textContent = "See where you stand — and who's climbing up behind you.";
+  }
+
+  lbPaintBars(document.getElementById('lbRowsAround'));
+  lbRunCountUps(document);
+  lbBindNameTips(document.getElementById('lbRowsAround'));
+
+  // Sync board heights after layout settles
+  requestAnimationFrame(() => {
+    lbSyncBoardHeights();
+    window.addEventListener('resize', lbSyncBoardHeights);
+  });
+}
+
+function renderLbFriends(list) {
+  const friendsRanked = [...list].sort((a, b) => lbScore(b) - lbScore(a));
+  const friendMax = lbScore(friendsRanked[0]) || 1;
+  friendsRanked.forEach((f, i) => {
+    const move = lbLiveTrend(f.name, i + 1, 'friends', f.trend);
+    f._trend = move ? move.delta : 0;
+    f._boosted = !!(move && move.boosted);
+    f._ultra = !!(move && move.ultra);
+  });
+  const rows = document.getElementById('lbRows');
+  rows.scrollTop = 0;
+  rows.innerHTML = friendsRanked.map((f, i) =>
+    lbRowHtml(f, i, `#${i + 1}`, i < 3, friendMax, 0.5 + i * 0.07)
+  ).join('');
+
+  const meFriendIndex = friendsRanked.findIndex((f) => f.me);
+  const ord = (n) => n + (['th', 'st', 'nd', 'rd'][(n % 100 > 10 && n % 100 < 14) ? 0 : Math.min(n % 10, 4)] || 'th');
+  if (meFriendIndex !== -1) {
+    document.getElementById('lbFriendSummary').textContent = meFriendIndex === 0
+      ? `You're 1st out of your ${friendsRanked.length} friends — keep it up!`
+      : `You're ${ord(meFriendIndex + 1)} out of your ${friendsRanked.length} friends — ${friendsRanked[0].name} is in the lead.`;
+  }
+
+  lbPaintBars(rows);
+  lbRunCountUps(rows);
+  lbBindNameTips(rows);
+}
+
+function lbScore(f) {
+  return f ? f.points : 0;
+}
+
+function lbInitials(name) {
+  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
+function lbCompact(n) {
+  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+}
+
+function lbTrendHtml(t, boosted, ultra) {
+  if (!t) return '';
+  if (t > 0) {
+    return `<span class="lb-trend lb-up${ultra ? ' lb-ultra' : boosted ? ' lb-glow' : ''}">${ultra ? '🚀' : ''}▲${t}</span>`;
+  }
+  return `<span class="lb-trend lb-down">▼${Math.abs(t)}</span>`;
+}
+
+function lbRowHtml(f, i, rankLabel, rankTop, barMax, delay) {
+  return `
+    <div class="lb-row ${f.me ? 'lb-me' : ''} ${f._ultra ? 'lb-ultra' : ''}" style="animation-delay: ${delay}s">
+      <div class="lb-bar" data-width="${(lbScore(f) / barMax) * 100}"></div>
+      <span class="lb-rank ${rankTop ? 'lb-top' : ''}">${rankLabel}</span>
+      <span class="lb-player">
+        <span class="lb-avatar lb-small">${lbInitials(f.name)}</span>
+        <span class="lb-pname">${escapeHtml(f.name)}</span>${lbTrendHtml(f._trend, f._boosted, f._ultra)}${f.me ? '<span class="lb-you-tag">You</span>' : ''}
+      </span>
+      <span class="lb-num">${f.sessions} <span class="lb-unit">mo</span></span>
+      <span class="lb-num">${f.avgMinutes} <span class="lb-unit">min</span></span>
+      <span class="lb-num lb-streak">🔥 ${f.streak}d</span>
+      <span class="lb-num lb-pts-cell lb-pts-col"><span class="lb-count" data-target="${lbScore(f)}">0</span> <span class="lb-unit">🌙</span><span class="lb-alltime">${lbCompact(f.total)} all-time</span></span>
+    </div>`;
+}
+
+const LB_DAY_MS = 86400000;
+const LB_TWO_H_MS = 7200000;
+const LB_TWO_D_MS = 2 * LB_DAY_MS;
+
+function lbLsGet(k) {
+  try { return JSON.parse(localStorage.getItem(k)); } catch { return null; }
+}
+
+function lbLiveTrend(name, currentRank, context, seedTrend) {
+  const key = `lb-trend:${context}:${name}`;
+  const now = Date.now();
+  const state = lbLsGet(key) || { rank: null, moves: [] };
+  state.moves = state.moves.filter((m) => now - m.at < LB_TWO_D_MS);
+
+  if (state.rank === null) {
+    if (seedTrend) state.moves.push({ delta: seedTrend, at: now });
+  } else if (state.rank !== currentRank) {
+    const delta = state.rank - currentRank;
+    state.moves.push({ delta, at: now });
+  }
+
+  state.rank = currentRank;
+  try { localStorage.setItem(key, JSON.stringify(state)); } catch {}
+
+  const active = state.moves[state.moves.length - 1];
+  if (!active) return null;
+  const boosted = active.delta >= 2;
+  const ultra = active.delta > 0 && state.moves
+    .filter((m) => m.delta > 0 && now - m.at < LB_TWO_H_MS)
+    .reduce((s, m) => s + m.delta, 0) >= 10;
+  return now - active.at < (boosted || ultra ? LB_TWO_D_MS : LB_DAY_MS)
+    ? { ...active, boosted, ultra } : null;
+}
+
+function lbPaintBars(scope = document) {
+  setTimeout(() => {
+    scope.querySelectorAll('.lb-row .lb-bar').forEach((b) => {
+      b.style.width = b.dataset.width + '%';
+    });
+  }, 700);
+}
+
+function lbRunCountUps(scope = document) {
+  const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+  scope.querySelectorAll('.lb-count').forEach((el) => {
+    const target = +el.dataset.target;
+    const duration = 1200;
+    const start = performance.now() + 450;
+    (function tick(now) {
+      const t = Math.min(Math.max((now - start) / duration, 0), 1);
+      el.textContent = Math.round(easeOut(t) * target).toLocaleString();
+      if (t < 1) requestAnimationFrame(tick);
+    })(performance.now());
+  });
+}
+
+function lbSyncBoardHeights() {
+  const rows = document.getElementById('lbRows');
+  const rowsAround = document.getElementById('lbRowsAround');
+  if (rows && rowsAround) {
+    rows.style.maxHeight = rowsAround.scrollHeight + 'px';
+  }
+}
+
+function lbBindPodiumSparkle() {
+  const firstCard = document.querySelector('.lb-podium-card.first');
+  if (!firstCard) return;
+  const GLYPHS = ['✦', '✧', '★', '✨'];
+  const medal = firstCard.querySelector('.lb-medal');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let pulseTimer;
+  const particles = new Set();
+  let rafId = null;
+
+  function tick(now) {
+    const GRAVITY = 950;
+    const AIR_DRAG = 0.35;
+    for (const p of particles) {
+      const t = (now - p.born) / 1000;
+      const dt = Math.min((now - p.last) / 1000, 0.05);
+      p.last = now;
+      p.vy += GRAVITY * dt;
+      p.vx *= Math.max(1 - AIR_DRAG * dt, 0);
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      const life = t / p.lifespan;
+      if (life >= 1) {
+        p.el.remove();
+        particles.delete(p);
+        continue;
+      }
+      const opacity = life < 0.08 ? life / 0.08 : life > 0.55 ? 1 - (life - 0.55) / 0.45 : 1;
+      const scale = p.scale * (1 - life * 0.35);
+      p.el.style.opacity = opacity;
+      p.el.style.transform = `translate(${p.x}px, ${p.y}px) rotate(${p.rot}deg) scale(${scale})`;
+    }
+    rafId = particles.size ? requestAnimationFrame(tick) : null;
+  }
+
+  firstCard.addEventListener('click', () => {
+    firstCard.classList.add('lb-pulse');
+    clearTimeout(pulseTimer);
+    pulseTimer = setTimeout(() => firstCard.classList.remove('lb-pulse'), 600);
+    if (medal) {
+      medal.style.animation = 'none';
+      void medal.offsetWidth;
+      medal.style.animation = 'lbMedalPop 0.6s cubic-bezier(0.22, 1, 0.36, 1) both';
+    }
+    if (reducedMotion) return;
+    const rect = firstCard.getBoundingClientRect();
+    for (let i = 0; i < 22; i++) {
+      const el = document.createElement('span');
+      el.className = 'lb-sparkle';
+      el.textContent = GLYPHS[Math.floor(Math.random() * GLYPHS.length)];
+      el.style.fontSize = (10 + Math.random() * 10) + 'px';
+      document.body.appendChild(el);
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 140 + Math.random() * 260;
+      particles.add({
+        el,
+        x: rect.left + rect.width * (0.15 + Math.random() * 0.7),
+        y: rect.top + rect.height * (0.15 + Math.random() * 0.7),
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed - 220,
+        rot: Math.random() * 360,
+        vr: (Math.random() - 0.5) * 540,
+        scale: 0.8 + Math.random() * 0.5,
+        born: performance.now(),
+        last: performance.now(),
+        lifespan: 1.6 + Math.random() * 0.9
+      });
+    }
+    if (rafId === null) rafId = requestAnimationFrame(tick);
+  });
+}
+
+function lbBindNameTips(scope = document) {
+  const nameTip = document.getElementById('lbNameTip') || (() => {
+    const el = document.createElement('div');
+    el.id = 'lbNameTip';
+    el.className = 'lb-name-tip';
+    document.body.appendChild(el);
+    return el;
+  })();
+  let tipFor = null;
+
+  const show = (el) => {
+    if (el.scrollWidth <= el.clientWidth) return;
+    nameTip.textContent = el.textContent;
+    const r = el.getBoundingClientRect();
+    nameTip.style.left = Math.min(r.left, innerWidth - 16) + 'px';
+    nameTip.style.top = (r.top - 8) + 'px';
+    nameTip.classList.add('lb-show');
+    tipFor = el;
+  };
+  const hide = () => { nameTip.classList.remove('lb-show'); tipFor = null; };
+
+  scope.querySelectorAll('.lb-player .lb-pname').forEach((el) => {
+    el.addEventListener('mouseenter', () => show(el));
+    el.addEventListener('mouseleave', hide);
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      tipFor === el ? hide() : show(el);
     });
   });
+}
+
+function setupLeaderboard() {
+  // The leaderboard is rendered fresh each time the view loads.
+  // Sparkle binding happens inside renderLeaderboard after the podium is built.
 }
 
 let adminTab = 'users';
@@ -1481,10 +2330,12 @@ function toDatetimeLocal(dateStr) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  applyTheme(currentTheme);
   setupAuth();
   setupNavigation();
   setupProfile();
   setupSettings();
+  setupTheme();
   setupTasks();
   setupCalendar();
   setupTimer();

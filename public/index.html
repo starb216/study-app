@@ -173,6 +173,13 @@
         <button class="view-btn" data-cal-view="day">Day</button>
       </div>
 
+      <div class="calendar-options">
+        <label>
+          <input type="checkbox" id="hideCompleted" />
+          Hide completed tasks & past events
+        </label>
+      </div>
+
       <div class="calendar-header">
         <button id="prevMonth" class="btn-icon">‹</button>
         <h3 id="monthLabel"></h3>
@@ -287,19 +294,51 @@
 
     <!-- Leaderboard -->
     <section id="leaderboardView" class="view hidden">
-      <h2>Leaderboard</h2>
-      <div class="leaderboard-tabs">
-        <button class="tab-btn active" data-lb-metric="points" data-lb-scope="global">Points · Global</button>
-        <button class="tab-btn" data-lb-metric="points" data-lb-scope="friends">Points · Friends</button>
-        <button class="tab-btn" data-lb-metric="streaks" data-lb-scope="global">Streaks · Global</button>
-        <button class="tab-btn" data-lb-metric="streaks" data-lb-scope="friends">Streaks · Friends</button>
+      <div class="lb-page">
+        <header class="lb-header">
+          <h1>Leaderboard</h1>
+          <p id="lbHeaderSub">See where you stand — and who's climbing up behind you.</p>
+          <span class="lb-month-pill" id="lbMonthPill"></span>
+        </header>
+
+        <section class="lb-podium" id="lbPodium"></section>
+
+        <div class="lb-boards">
+          <div class="lb-board lb-friends">
+            <h2 class="lb-section-title">Your Friends</h2>
+            <p class="lb-section-sub" id="lbFriendSummary"></p>
+            <section class="lb-list">
+              <div class="lb-list-header">
+                <span>Rank</span>
+                <span>Friend</span>
+                <span>Sessions</span>
+                <span>Avg / Sess.</span>
+                <span>Streak</span>
+                <span class="lb-pts-col">Points 🌙</span>
+              </div>
+              <div id="lbRows" class="lb-rows-scroll"></div>
+            </section>
+          </div>
+
+          <div class="lb-board lb-around">
+            <h2 class="lb-section-title">Around You</h2>
+            <p class="lb-section-sub" id="lbGlobalSummary"></p>
+            <section class="lb-list">
+              <div class="lb-list-header">
+                <span>Rank</span>
+                <span>User</span>
+                <span>Sessions</span>
+                <span>Avg / Sess.</span>
+                <span>Streak</span>
+                <span class="lb-pts-col">Points 🌙</span>
+              </div>
+              <div id="lbRowsAround"></div>
+            </section>
+          </div>
+        </div>
+
+        <footer class="lb-footer">Ranked by 🌙 earned this month (1 point per minute studied) · all-time totals are just for show · arrows mean recently moved up/down a rank</footer>
       </div>
-      <table class="table">
-        <thead>
-          <tr><th>#</th><th>User</th><th id="leaderboardValueHeader">Shells</th></tr>
-        </thead>
-        <tbody id="leaderboardBody"></tbody>
-      </table>
     </section>
 
     <!-- Admin -->
@@ -376,6 +415,22 @@
               <input type="password" id="passConfirm" required minlength="6" />
             </label>
             <button type="submit" class="btn-primary">Change Password</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Appearance</h3>
+          <form id="themeForm" class="form-card">
+            <label>Theme
+              <select id="themeSelect">
+                <option value="">Sage (default)</option>
+                <option value="pink">Pink</option>
+                <option value="blue">Blue</option>
+                <option value="yellow">Yellow</option>
+                <option value="grey">Grey</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
           </form>
         </div>
 

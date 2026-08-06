@@ -1,7 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.resolve(__dirname, '..', 'study_app.db');
+const dbPath = process.env.VERCEL
+  ? path.join('/tmp', 'study_app.db')
+  : path.resolve(__dirname, '..', 'study_app.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('SQLite connection error:', err.message);
