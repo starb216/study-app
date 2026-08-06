@@ -194,6 +194,7 @@
             <div class="mood-reminder" id="moodReminder"></div>
           </div>
           <div class="visual-calendar-right">
+            <button class="learn-more-btn" id="learnMore" type="button">Click me to learn more</button>
             <button class="holiday-toggle" id="holidayToggle" type="button">Religious holidays: off</button>
             <div class="display-label">Selected date</div>
             <div class="finished-label" id="finishedLabel">FINISHED</div>
@@ -241,6 +242,48 @@
             <button data-mood="clear" title="Clear" type="button">❌</button>
           </div>
           <button class="mood-go-back" id="moodGoBack" type="button">Go back</button>
+        </div>
+      </div>
+
+      <div class="instructions-overlay" id="instructionsOverlay">
+        <div class="instructions-box">
+          <h2>How to use this calendar</h2>
+
+          <h3>1. Pick a date</h3>
+          <p>Click any day in the calendar. The right panel updates to that date. Past days show a diagonal <strong>FINISHED</strong> tag; today has a black border.</p>
+
+          <h3>2. Add the most important thing</h3>
+          <p>Type something like <code>8:30-9:30 meeting</code> under <strong>"What is the most important thing?"</strong>. The calendar day changes shape and color based on keywords:</p>
+          <table class="shape-table">
+            <tr><th>Keywords</th><th>Shape</th><th>Color</th></tr>
+            <tr><td>homework, exam, class, study, meeting, assignment, project, quiz, school…</td><td>Hexagon</td><td>Light blue</td></tr>
+            <tr><td>family, birthday, mom, dad, love, wedding, anniversary, memorial…</td><td>Heart</td><td>Pink</td></tr>
+            <tr><td>work, job, client, report, office, contract, proposal…</td><td>Star</td><td>Yellow</td></tr>
+          </table>
+
+          <h3>3. Add reminders</h3>
+          <ul>
+            <li>Click <strong>＋ Add reminder</strong> to create a reminder.</li>
+            <li>Type the reminder with a time, e.g. <code>9:00 go to eat</code>.</li>
+            <li>Choose a level of emergency: Low, Medium, or High (higher = louder alarm).</li>
+            <li>Click 📝 to add remarks.</li>
+            <li>Click ✓ to collapse; click × to delete.</li>
+          </ul>
+          <p>When the reminder time arrives, a full-screen alarm pops up. Click <strong>Close Alarm</strong> to stop it and remove the reminder.</p>
+
+          <h3>4. Set your daily mood</h3>
+          <p>Click <strong>Mark your mood</strong> below the calendar and pick an emoji. The emoji appears on that day. For today, the picker only pops up once; click the emoji or the mood text to change it later.</p>
+
+          <h3>5. Holidays</h3>
+          <p>Click the <strong>Religious holidays</strong> toggle in the top-right to show or hide religious holidays.</p>
+
+          <h3>6. Events & Tasks</h3>
+          <p>Use the form above the calendar to add timed events or tasks. They appear on the calendar and in the Upcoming list. Complete tasks to keep your day marked as finished.</p>
+
+          <h3>7. Data</h3>
+          <p>Events, tasks, and study sessions are saved to your account. Occasions, reminders, and moods are saved in your browser's localStorage, so they stay after refresh but only on this browser/device.</p>
+
+          <button class="instructions-close" id="instructionsClose" type="button">Got it</button>
         </div>
       </div>
     </section>
@@ -349,6 +392,7 @@
             <input type="checkbox" id="sleepEnabled" checked />
             <span>Enable wake-up alarm</span>
           </label>
+          <button type="button" id="downloadSleepIcs" class="btn-secondary">📅 Add to Calendar</button>
           <button type="submit" class="btn-primary">💾 Save Schedule</button>
         </div>
       </form>

@@ -870,6 +870,13 @@ function setupCalendar() {
   });
   document.getElementById('moodGoBack').addEventListener('click', () => closeMoodPicker(null));
 
+  const instructionsOverlay = document.getElementById('instructionsOverlay');
+  document.getElementById('learnMore').addEventListener('click', () => instructionsOverlay.classList.add('active'));
+  document.getElementById('instructionsClose').addEventListener('click', () => instructionsOverlay.classList.remove('active'));
+  instructionsOverlay.addEventListener('click', (e) => {
+    if (e.target === instructionsOverlay) instructionsOverlay.classList.remove('active');
+  });
+
   document.getElementById('closeAlarm').addEventListener('click', () => {
     stopAlarmSound();
     document.getElementById('alarmOverlay').classList.remove('active');
@@ -1756,6 +1763,70 @@ function setupTimer() {
   });
 }
 
+function formatIcsDate(date) {
+  return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+}
+
+function buildSleepIcs(bedtime, wakeTime) {
+  const now = new Date();
+  const today = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  const uidBase = Math.random().toString(36).slice(2) + '@study-app';
+
+  const [bedHour, bedMin] = bedtime.split(':').map(Number);
+  const [wakeHour, wakeMin] = wakeTime.split(':').map(Number);
+
+  const bedStart = `${today}T${String(bedHour).padStart(2, '0')}${String(bedMin).padStart(2, '0')}00`;
+  const wakeStart = `${today}T${String(wakeHour).padStart(2, '0')}${String(wakeMin).padStart(2, '0')}00`;
+
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Study App//Sleep Schedule//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'BEGIN:VEVENT',
+    `UID:${uidBase}-bedtime`,
+    `DTSTAMP:${formatIcsDate(now)}`,
+    `DTSTART;TZID=local:${bedStart}`,
+    'RRULE:FREQ=DAILY',
+    'SUMMARY:🛏️ Bedtime',
+    'DESCRIPTION:Time to wind down and sleep.',
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Bedtime reminder',
+    'TRIGGER:-PT0M',
+    'END:VALARM',
+    'END:VEVENT',
+    'BEGIN:VEVENT',
+    `UID:${uidBase}-wake`,
+    `DTSTAMP:${formatIcsDate(now)}`,
+    `DTSTART;TZID=local:${wakeStart}`,
+    'RRULE:FREQ=DAILY',
+    'SUMMARY:⏰ Wake Up',
+    'DESCRIPTION:Time to wake up!',
+    'BEGIN:VALARM',
+    'ACTION:DISPLAY',
+    'DESCRIPTION:Wake up alarm',
+    'TRIGGER:-PT0M',
+    'END:VALARM',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ];
+  return lines.join('\r\n');
+}
+
+function downloadIcs(filename, content) {
+  const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 async function loadSleep() {
   try {
     sleepSchedule = await api('/sleep');
@@ -1793,6 +1864,18 @@ function setupSleep() {
       updateSleepAlarmDisplay();
       showMessage('Sleep schedule saved', 'success');
     } catch {}
+  });
+
+  document.getElementById('downloadSleepIcs').addEventListener('click', () => {
+    const bedtime = document.getElementById('sleepBedtime').value;
+    const wake_time = document.getElementById('sleepWake').value;
+    if (!bedtime || !wake_time) {
+      showMessage('Set a bedtime and wake time first', 'error');
+      return;
+    }
+    const ics = buildSleepIcs(bedtime, wake_time);
+    downloadIcs('sleep-schedule.ics', ics);
+    showMessage('Calendar file downloaded — import it in your calendar app', 'success');
   });
 
   document.getElementById('wakeAlarmStop').addEventListener('click', () => {
