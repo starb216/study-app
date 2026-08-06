@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Study App</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="logo">📚</span>
+      <h1>Study App</h1>
+    </div>
+    <nav id="mainNav" class="nav hidden">
+      <a href="#dashboard" data-view="dashboard">Dashboard</a>
+      <a href="#tasks" data-view="tasks">Tasks/Events</a>
+      <a href="#calendar" data-view="calendar">Calendar</a>
+      <a href="#timer" data-view="timer">Timer</a>
+      <a href="#sleep" data-view="sleep">Sleep</a>
+      <a href="#friends" data-view="friends">Friends</a>
+      <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
+      <a href="#admin" data-view="admin" id="adminNavLink" class="hidden">Admin</a>
+      <div class="profile-dropdown" id="profileDropdown">
+        <button class="profile-btn" id="profileBtn">
+          <span class="profile-avatar" id="profileAvatar">👤</span>
+          <span id="profileName">User</span>
+          <span>▾</span>
+        </button>
+        <div class="profile-menu hidden" id="profileMenu">
+          <a href="#settings" data-view="settings">Settings</a>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div id="message" class="message hidden"></div>
+
+    <!-- Auth -->
+    <section id="authView" class="view">
+      <div class="auth-box">
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="login">Login</button>
+          <button class="tab-btn" data-tab="register">Register</button>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <h2>Welcome back</h2>
+          <label>Username or Email
+            <input type="text" id="loginUser" required />
+          </label>
+          <label>Password
+            <input type="password" id="loginPass" required />
+          </label>
+          <button type="submit" class="btn-primary">Log in</button>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden">
+          <h2>Create account</h2>
+          <label>Username
+            <input type="text" id="regUser" required minlength="3" />
+          </label>
+          <label>Email
+            <input type="email" id="regEmail" required />
+          </label>
+          <label>Password
+            <input type="password" id="regPass" required minlength="6" />
+          </label>
+          <button type="submit" class="btn-primary">Register</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboardView" class="view hidden">
+      <h2>Dashboard</h2>
+      <div class="dashboard-cards">
+        <div class="card">
+          <h3>Welcome, <span id="dashUser">Student</span></h3>
+          <p class="big" id="dashBalance">0 🐚</p>
+          <p>Total shells</p>
+        </div>
+        <div class="card">
+          <h3>Tasks</h3>
+          <p class="big" id="dashTasks">0</p>
+          <p>Pending tasks</p>
+        </div>
+        <div class="card">
+          <h3>Sessions</h3>
+          <p class="big" id="dashSessions">0</p>
+          <p>Study sessions</p>
+        </div>
+        <div class="card">
+          <h3>Streak 🔥</h3>
+          <p class="big" id="dashStreak">0</p>
+          <p>Current study streak</p>
+        </div>
+      </div>
+      <div class="quick-actions">
+        <button class="btn-primary" data-view="timer">Start study timer</button>
+        <button class="btn-secondary" data-view="tasks">View tasks</button>
+      </div>
+
+      <div class="card streak-card">
+        <h3>Study Streak Calendar</h3>
+        <div class="streak-calendar" id="streakCalendar"></div>
+      </div>
+    </section>
+
+    <!-- Tasks/Events -->
+    <section id="tasksView" class="view hidden">
+      <h2>Tasks & Events</h2>
+
+      <div class="tasks-tabs">
+        <button class="tab-btn active" data-tasks-tab="addTask">Add Task</button>
+        <button class="tab-btn" data-tasks-tab="addEvent">Add Event</button>
+      </div>
+
+      <form id="taskForm" class="inline-form tasks-form">
+        <input type="hidden" id="taskId" />
+        <input type="text" id="taskTitle" placeholder="Task title" required />
+        <input type="text" id="taskSubject" placeholder="Subject" />
+        <input type="date" id="taskDue" />
+        <button type="submit" class="btn-primary" id="taskSubmit">Add Task</button>
+        <button type="button" class="btn-secondary hidden" id="taskCancel">Cancel</button>
+      </form>
+
+      <form id="tasksEventForm" class="inline-form tasks-form hidden">
+        <input type="hidden" id="tasksEventId" />
+        <input type="text" id="tasksEventTitle" placeholder="Event title" required />
+        <input type="datetime-local" id="tasksEventDate" required />
+        <input type="number" id="tasksEventDuration" placeholder="Duration (min)" min="5" max="480" value="60" />
+        <select id="tasksEventReminder">
+          <option value="5">5 min before</option>
+          <option value="15" selected>15 min before</option>
+          <option value="30">30 min before</option>
+          <option value="60">1 hr before</option>
+          <option value="180">3 hrs before</option>
+        </select>
+        <button type="submit" class="btn-primary" id="tasksEventSubmit">Add Event</button>
+        <button type="button" class="btn-secondary hidden" id="tasksEventCancel">Cancel</button>
+      </form>
+
+      <h3>Upcoming</h3>
+      <ul id="taskList" class="list"></ul>
+    </section>
+
+    <!-- Calendar -->
+    <section id="calendarView" class="view hidden">
+      <h2>Calendar</h2>
+      <form id="eventForm" class="inline-form">
+        <input type="hidden" id="eventId" />
+        <input type="text" id="eventTitle" placeholder="Event title" required />
+        <input type="datetime-local" id="eventDate" required />
+        <input type="number" id="eventDuration" placeholder="Duration (min)" min="5" max="480" value="60" />
+        <select id="eventReminder">
+          <option value="5">5 min before</option>
+          <option value="15" selected>15 min before</option>
+          <option value="30">30 min before</option>
+          <option value="60">1 hr before</option>
+          <option value="180">3 hrs before</option>
+        </select>
+        <button type="submit" class="btn-primary" id="eventSubmit">Add Event</button>
+        <button type="button" class="btn-secondary hidden" id="eventCancel">Cancel</button>
+      </form>
+
+      <div class="calendar-view-switcher">
+        <button class="view-btn active" data-cal-view="month">Month</button>
+        <button class="view-btn" data-cal-view="twoWeeks">2 Weeks</button>
+        <button class="view-btn" data-cal-view="week">Week</button>
+        <button class="view-btn" data-cal-view="day">Day</button>
+      </div>
+
+      <div class="calendar-options">
+        <label>
+          <input type="checkbox" id="hideCompleted" />
+          Hide completed tasks & past events
+        </label>
+      </div>
+
+      <div class="calendar-header">
+        <button id="prevMonth" class="btn-icon">‹</button>
+        <h3 id="monthLabel"></h3>
+        <button id="nextMonth" class="btn-icon">›</button>
+      </div>
+
+      <div id="monthCalendar" class="calendar-month-container">
+        <div class="visual-calendar-card">
+          <div class="visual-calendar-left">
+            <div class="calendar-grid" id="calendarGrid"></div>
+            <div class="mood-reminder" id="moodReminder"></div>
+          </div>
+          <div class="visual-calendar-right">
+            <button class="holiday-toggle" id="holidayToggle" type="button">Religious holidays: off</button>
+            <div class="display-label">Selected date</div>
+            <div class="finished-label" id="finishedLabel">FINISHED</div>
+            <div class="display-date" id="displayDate"></div>
+            <div class="display-year" id="displayYear"></div>
+
+            <div class="input-group">
+              <label for="occasionsInput">What is the most important thing?</label>
+              <textarea id="occasionsInput" placeholder="e.g. 8:30-9:30 meeting"></textarea>
+            </div>
+
+            <div class="input-group">
+              <label>What reminders?</label>
+              <div class="reminder-list" id="reminderList"></div>
+              <button class="add-reminder" id="addReminder" type="button">＋ Add reminder</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="timeGridCalendar" class="calendar-timegrid-container hidden">
+        <div class="timegrid-header" id="timeGridHeader"></div>
+        <div class="timegrid-body" id="timeGridBody"></div>
+      </div>
+
+      <h3>Upcoming</h3>
+      <ul id="eventList" class="list"></ul>
+
+      <div class="alarm-overlay" id="alarmOverlay">
+        <div class="alarm-title">REMINDER</div>
+        <div class="alarm-subtitle" id="alarmText"></div>
+        <div class="alarm-remark" id="alarmRemark"></div>
+        <button class="alarm-btn" id="closeAlarm" type="button">Close Alarm</button>
+      </div>
+
+      <div class="mood-overlay" id="moodOverlay">
+        <div class="mood-box">
+          <div class="mood-title">How is your feeling?</div>
+          <div class="mood-options">
+            <button data-mood="😢" title="Sad" type="button">😢</button>
+            <button data-mood="😠" title="Angry" type="button">😠</button>
+            <button data-mood="😊" title="Happy" type="button">😊</button>
+            <button data-mood="😐" title="Boring" type="button">😐</button>
+            <button data-mood="🤷" title="IDK" type="button">🤷</button>
+            <button data-mood="clear" title="Clear" type="button">❌</button>
+          </div>
+          <button class="mood-go-back" id="moodGoBack" type="button">Go back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Timer -->
+    <section id="timerView" class="view hidden">
+      <h2>Study Timer</h2>
+      <div class="timer-card">
+        <div id="timerDisplay" class="timer-display">00:00</div>
+        <label>Minutes
+          <input type="number" id="timerInput" min="1" max="180" value="25" />
+        </label>
+        <div class="timer-controls">
+          <button id="timerStart" class="btn-primary">Start</button>
+          <button id="timerPause" class="btn-secondary" disabled>Pause</button>
+          <button id="timerReset" class="btn-danger">Reset</button>
+        </div>
+        <p id="timerResult" class="timer-result"></p>
+      </div>
+    </section>
+
+    <!-- Sleep -->
+    <section id="sleepView" class="view hidden">
+      <h2>Sleep Planner</h2>
+      <form id="sleepForm" class="form-card">
+        <label>Bedtime
+          <input type="time" id="sleepBedtime" required />
+        </label>
+        <label>Wake time
+          <input type="time" id="sleepWake" required />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="sleepEnabled" checked />
+          Enable reminders
+        </label>
+        <button type="submit" class="btn-primary">Save Schedule</button>
+      </form>
+    </section>
+
+    <!-- Friends -->
+    <section id="friendsView" class="view hidden">
+      <h2>Friends</h2>
+      <form id="friendForm" class="inline-form">
+        <input type="text" id="friendUsername" placeholder="Username" required />
+        <button type="submit" class="btn-primary">Send Request</button>
+      </form>
+      <h3>Pending Requests</h3>
+      <ul id="pendingList" class="list"></ul>
+      <h3>My Friends</h3>
+      <ul id="friendList" class="list"></ul>
+    </section>
+
+    <!-- Leaderboard -->
+    <section id="leaderboardView" class="view hidden">
+      <div class="lb-page">
+        <header class="lb-header">
+          <h1>Leaderboard</h1>
+          <p id="lbHeaderSub">See where you stand — and who's climbing up behind you.</p>
+          <span class="lb-month-pill" id="lbMonthPill"></span>
+        </header>
+
+        <section class="lb-podium" id="lbPodium"></section>
+
+        <div class="lb-boards">
+          <div class="lb-board lb-friends">
+            <h2 class="lb-section-title">Your Friends</h2>
+            <p class="lb-section-sub" id="lbFriendSummary"></p>
+            <section class="lb-list">
+              <div class="lb-list-header">
+                <span>Rank</span>
+                <span>Friend</span>
+                <span>Sessions</span>
+                <span>Avg / Sess.</span>
+                <span>Streak</span>
+                <span class="lb-pts-col">Points 🌙</span>
+              </div>
+              <div id="lbRows" class="lb-rows-scroll"></div>
+            </section>
+          </div>
+
+          <div class="lb-board lb-around">
+            <h2 class="lb-section-title">Around You</h2>
+            <p class="lb-section-sub" id="lbGlobalSummary"></p>
+            <section class="lb-list">
+              <div class="lb-list-header">
+                <span>Rank</span>
+                <span>User</span>
+                <span>Sessions</span>
+                <span>Avg / Sess.</span>
+                <span>Streak</span>
+                <span class="lb-pts-col">Points 🌙</span>
+              </div>
+              <div id="lbRowsAround"></div>
+            </section>
+          </div>
+        </div>
+
+        <footer class="lb-footer">Ranked by 🌙 earned this month (1 point per minute studied) · all-time totals are just for show · arrows mean recently moved up/down a rank</footer>
+      </div>
+    </section>
+
+    <!-- Admin -->
+    <section id="adminView" class="view hidden">
+      <h2>Admin Panel</h2>
+      <div class="admin-tabs">
+        <button class="tab-btn active" data-admin-tab="users">Users</button>
+        <button class="tab-btn" data-admin-tab="tasks">Tasks</button>
+        <button class="tab-btn" data-admin-tab="events">Events</button>
+        <button class="tab-btn" data-admin-tab="sessions">Sessions</button>
+        <button class="tab-btn" data-admin-tab="friends">Friends</button>
+      </div>
+
+      <div id="adminUsers" class="admin-section">
+        <h3>All Users</h3>
+        <table class="table">
+          <thead>
+            <tr><th>ID</th><th>User</th><th>Email</th><th>Shells</th><th>Tasks</th><th>Sessions</th><th>Study Min</th><th>Admin</th><th>Joined</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
+      </div>
+
+      <div id="adminTasks" class="admin-section hidden">
+        <h3>All Tasks</h3>
+        <ul id="adminTaskList" class="list"></ul>
+      </div>
+
+      <div id="adminEvents" class="admin-section hidden">
+        <h3>All Events</h3>
+        <ul id="adminEventList" class="list"></ul>
+      </div>
+
+      <div id="adminSessions" class="admin-section hidden">
+        <h3>All Study Sessions</h3>
+        <ul id="adminSessionList" class="list"></ul>
+      </div>
+
+      <div id="adminFriends" class="admin-section hidden">
+        <h3>All Friendships</h3>
+        <ul id="adminFriendList" class="list"></ul>
+      </div>
+    </section>
+    <!-- Settings -->
+    <section id="settingsView" class="view hidden">
+      <h2>Settings</h2>
+      <div class="settings-grid">
+        <div class="card">
+          <h3>Account Information</h3>
+          <form id="accountForm" class="form-card">
+            <label>Username
+              <input type="text" id="settingsUsername" disabled />
+            </label>
+            <label>Email
+              <input type="email" id="settingsEmail" required />
+            </label>
+            <label>Current Password
+              <input type="password" id="settingsCurrentPass" required placeholder="Required to update email" />
+            </label>
+            <button type="submit" class="btn-primary">Update Email</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Change Password</h3>
+          <form id="passwordForm" class="form-card">
+            <label>Current Password
+              <input type="password" id="passCurrent" required />
+            </label>
+            <label>New Password
+              <input type="password" id="passNew" required minlength="6" />
+            </label>
+            <label>Confirm New Password
+              <input type="password" id="passConfirm" required minlength="6" />
+            </label>
+            <button type="submit" class="btn-primary">Change Password</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Appearance</h3>
+          <form id="themeForm" class="form-card">
+            <label>Theme
+              <select id="themeSelect">
+                <option value="">Sage (default)</option>
+                <option value="pink">Pink</option>
+                <option value="blue">Blue</option>
+                <option value="yellow">Yellow</option>
+                <option value="grey">Grey</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3>Danger Zone</h3>
+          <button type="button" id="settingsLogout" class="btn-danger">Log out</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
