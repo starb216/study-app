@@ -659,9 +659,8 @@ button {
   border-collapse: collapse;
   background: var(--card);
   border-radius: var(--radius);
-  overflow: hidden;
+  overflow-x: auto;
   box-shadow: var(--shadow);
-  table-layout: fixed;
 }
 
 .table th,
@@ -692,13 +691,15 @@ button {
 .table .actions {
   white-space: nowrap;
   text-align: right;
-  width: 140px;
+  min-width: 170px;
 }
 
 .table .actions .btn-secondary,
 .table .actions .btn-danger {
   display: inline-block;
   margin: 0 0.15rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
 }
 
 /* ---------- 11. Tabs ---------- */
@@ -1167,8 +1168,69 @@ button {
   }
 }
 
-/* Visual calendar integration */
-/* ---------- 15. Visual Calendar ---------- */
+/* ---------- 15. Calendar Animations ---------- */
+
+@keyframes calFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes calRiseIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes calPopIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes calSlideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes calPulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 35%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--primary) 0%, transparent); }
+}
+
+.calendar-header,
+.calendar-grid {
+  animation: calFadeUp 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.cal-replay {
+  animation: none;
+}
+
+.cal-replay.calendar-header,
+.cal-replay.calendar-grid {
+  animation: calFadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.calendar-day {
+  animation: calPopIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.calendar-day:nth-child(7n+1) { animation-delay: 0ms; }
+.calendar-day:nth-child(7n+2) { animation-delay: 25ms; }
+.calendar-day:nth-child(7n+3) { animation-delay: 50ms; }
+.calendar-day:nth-child(7n+4) { animation-delay: 75ms; }
+.calendar-day:nth-child(7n+5) { animation-delay: 100ms; }
+.calendar-day:nth-child(7n+6) { animation-delay: 125ms; }
+.calendar-day:nth-child(7n+7) { animation-delay: 150ms; }
+
+.calendar-day.selected {
+  animation: calPopIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both, calPulse 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.5s;
+}
+
+.month-item,
+.calendar-day-chip {
+  animation: calSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---------- 16. Visual Calendar ---------- */
 .visual-calendar-card {
   background: var(--card);
   border: 2px solid var(--text);
@@ -1178,6 +1240,7 @@ button {
   grid-template-columns: 1.6fr 1fr;
   gap: 2rem;
   margin-bottom: 1.5rem;
+  animation: calRiseIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .visual-calendar-left {
@@ -2391,7 +2454,9 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lb-page *, .lb-page *::before, .lb-page *::after {
+  .lb-page *, .lb-page *::before, .lb-page *::after,
+  .calendar-grid *, .calendar-grid *::before, .calendar-grid *::after,
+  .visual-calendar-card, .visual-calendar-card *::before, .visual-calendar-card *::after {
     animation: none !important;
     transition: none !important;
   }
