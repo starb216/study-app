@@ -119,7 +119,7 @@ router.get('/balance', auth, async (req, res) => {
 router.get('/streaks', auth, async (req, res) => {
   try {
     const sessions = await all(
-      "SELECT DISTINCT DATE(ended_at, 'localtime') AS day FROM study_sessions WHERE user_id = ? ORDER BY day DESC",
+      "SELECT DISTINCT ended_at::date AS day FROM study_sessions WHERE user_id = ? ORDER BY day DESC",
       [req.userId]
     );
     const days = sessions.map((s) => s.day);

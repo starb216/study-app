@@ -15,13 +15,13 @@ const MONTHLY_CTE = `
       COALESCE(AVG(s.duration_minutes), 0) AS avgMinutes
     FROM users u
     LEFT JOIN study_sessions s ON s.user_id = u.id
-      AND strftime('%Y-%m', s.ended_at) = strftime('%Y-%m', 'now', 'localtime')
+      AND TO_CHAR(s.ended_at, 'YYYY-MM') = TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM')
     GROUP BY u.id
   )
 `;
 
 const STUDY_DAYS_SQL = `
-  SELECT DISTINCT user_id, DATE(ended_at, 'localtime') AS day
+  SELECT DISTINCT user_id, ended_at::date AS day
   FROM study_sessions
   ORDER BY user_id, day DESC
 `;
@@ -144,7 +144,7 @@ router.get('/streaks', async (req, res) => {
       SELECT
         u.id,
         u.username,
-        COUNT(DISTINCT DATE(s.ended_at, 'localtime')) AS study_days
+        COUNT(DISTINCT s.ended_at::date) AS study_days
       FROM users u
       LEFT JOIN study_sessions s ON s.user_id = u.id
       GROUP BY u.id
@@ -168,7 +168,7 @@ router.get('/friends/streaks', auth, async (req, res) => {
       SELECT
         u.id,
         u.username,
-        COUNT(DISTINCT DATE(s.ended_at, 'localtime')) AS study_days
+        COUNT(DISTINCT s.ended_at::date) AS study_days
       FROM users u
       LEFT JOIN study_sessions s ON s.user_id = u.id
       WHERE u.id = ? OR u.id IN (

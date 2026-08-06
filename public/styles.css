@@ -1,17 +1,74 @@
+/* ============================================================
+   STUDY APP DESIGN SYSTEM
+   ============================================================
+   This file defines all visual tokens and components for the
+   study app. Colors are controlled via CSS custom properties
+   and overridden per theme using [data-theme].
+   ============================================================ */
+
+/* ---------- 1. Design Tokens ---------- */
 :root {
+  /* Background & surfaces */
   --bg: #f6f7f4;
   --card: #ffffff;
+
+  /* Text */
   --text: #2a332e;
   --muted: #6e7b73;
+
+  /* Actions */
   --primary: #5b8a72;
   --primary-hover: #4a7360;
   --secondary: #e8ebe5;
   --secondary-hover: #daddd7;
+
+  /* States */
   --danger: #c1666b;
   --danger-hover: #a85459;
   --success: #6b9e75;
+  --warning: #d4a373;
+
+  /* Effects */
   --shadow: 0 4px 6px -1px rgba(42, 51, 46, 0.08), 0 2px 4px -2px rgba(42, 51, 46, 0.06);
+  --shadow-sm: 0 1px 2px rgba(42, 51, 46, 0.05);
+  --shadow-md: 0 4px 12px rgba(42, 51, 46, 0.08);
+  --shadow-lg: 0 12px 24px rgba(42, 51, 46, 0.12);
   --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  /* Semantic aliases */
+  --color-bg: var(--bg);
+  --color-surface: var(--card);
+  --color-text: var(--text);
+  --color-text-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: color-mix(in srgb, var(--primary) 12%, var(--card));
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-accent: #f59e0b;
+  --color-border: var(--secondary);
+  --color-border-strong: var(--text);
+
+  /* Calendar semantic tokens */
+  --cal-event-bg: #dbeafe;
+  --cal-event-text: #1e40af;
+  --cal-event-border: #3b82f6;
+  --cal-task-bg: #dcfce7;
+  --cal-task-text: #166534;
+  --cal-task-border: #22c55e;
+  --cal-task-completed-opacity: 0.6;
+  --cal-shape-default: #d8ddd8;
+  --cal-shape-school: #a8d5c3;
+  --cal-shape-family: #f4c2c2;
+  --cal-shape-work: #f3e5ab;
 }
 
 [data-theme="pink"] {
@@ -26,7 +83,20 @@
   --danger: #c45b4a;
   --danger-hover: #a64c3e;
   --success: #7aa874;
+  --warning: #d4a373;
   --shadow: 0 4px 6px -1px rgba(51, 42, 46, 0.08), 0 2px 4px -2px rgba(51, 42, 46, 0.06);
+
+  --color-accent: #ec4899;
+  --cal-event-bg: #fce7f3;
+  --cal-event-text: #9d174d;
+  --cal-event-border: #ec4899;
+  --cal-task-bg: #f3e8ff;
+  --cal-task-text: #6b21a8;
+  --cal-task-border: #a855f7;
+  --cal-shape-default: #e5e0e2;
+  --cal-shape-school: #d4b8c4;
+  --cal-shape-family: #f4c2c2;
+  --cal-shape-work: #f3e5ab;
 }
 
 [data-theme="blue"] {
@@ -41,7 +111,20 @@
   --danger: #c45b4a;
   --danger-hover: #a64c3e;
   --success: #5a9b6e;
+  --warning: #d4a373;
   --shadow: 0 4px 6px -1px rgba(42, 45, 51, 0.08), 0 2px 4px -2px rgba(42, 45, 51, 0.06);
+
+  --color-accent: #3b82f6;
+  --cal-event-bg: #dbeafe;
+  --cal-event-text: #1e40af;
+  --cal-event-border: #3b82f6;
+  --cal-task-bg: #dcfce7;
+  --cal-task-text: #166534;
+  --cal-task-border: #22c55e;
+  --cal-shape-default: #d8dde2;
+  --cal-shape-school: #a8d5c3;
+  --cal-shape-family: #f4c2c2;
+  --cal-shape-work: #f3e5ab;
 }
 
 [data-theme="yellow"] {
@@ -56,7 +139,20 @@
   --danger: #c45b4a;
   --danger-hover: #a64c3e;
   --success: #7aa874;
+  --warning: #d4a373;
   --shadow: 0 4px 6px -1px rgba(51, 49, 42, 0.08), 0 2px 4px -2px rgba(51, 49, 42, 0.06);
+
+  --color-accent: #f59e0b;
+  --cal-event-bg: #fef3c7;
+  --cal-event-text: #92400e;
+  --cal-event-border: #f59e0b;
+  --cal-task-bg: #dcfce7;
+  --cal-task-text: #166534;
+  --cal-task-border: #22c55e;
+  --cal-shape-default: #e0dcd2;
+  --cal-shape-school: #a8d5c3;
+  --cal-shape-family: #f4c2c2;
+  --cal-shape-work: #f3e5ab;
 }
 
 [data-theme="grey"] {
@@ -71,7 +167,20 @@
   --danger: #b85450;
   --danger-hover: #964541;
   --success: #5a9b6e;
+  --warning: #a8a29e;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+
+  --color-accent: #737373;
+  --cal-event-bg: #f3f4f6;
+  --cal-event-text: #374151;
+  --cal-event-border: #6b7280;
+  --cal-task-bg: #f0fdf4;
+  --cal-task-text: #166534;
+  --cal-task-border: #22c55e;
+  --cal-shape-default: #d1d5db;
+  --cal-shape-school: #a8d5c3;
+  --cal-shape-family: #f4c2c2;
+  --cal-shape-work: #f3e5ab;
 }
 
 [data-theme="dark"] {
@@ -86,11 +195,33 @@
   --danger: #e07a7a;
   --danger-hover: #c45f5f;
   --success: #7bc48a;
+  --warning: #d4a373;
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25), 0 2px 4px -2px rgba(0, 0, 0, 0.2);
+
+  --color-accent: #fbbf24;
+  --cal-event-bg: rgba(74, 124, 155, 0.35);
+  --cal-event-text: #a8d4f0;
+  --cal-event-border: #60a5fa;
+  --cal-task-bg: rgba(90, 155, 110, 0.35);
+  --cal-task-text: #a8e6b8;
+  --cal-task-border: #4ade80;
+  --cal-shape-default: #4a524a;
+  --cal-shape-school: #2d5a48;
+  --cal-shape-family: #5a3a3a;
+  --cal-shape-work: #5a502a;
 }
 
+/* ---------- 2. Base & Reset ---------- */
 * {
   box-sizing: border-box;
+}
+
+html {
+  color-scheme: light;
+}
+
+[data-theme="dark"] html {
+  color-scheme: dark;
 }
 
 body {
@@ -101,6 +232,7 @@ body {
   line-height: 1.5;
 }
 
+/* ---------- 3. Layout & Header ---------- */
 .app-header {
   background: var(--card);
   border-bottom: 1px solid var(--secondary);
@@ -181,6 +313,7 @@ body {
   display: none;
 }
 
+/* ---------- 4. Auth ---------- */
 .auth-box {
   max-width: 420px;
   margin: 3rem auto;
@@ -221,6 +354,7 @@ body {
   display: none;
 }
 
+/* ---------- 5. Forms & Controls ---------- */
 .auth-form h2 {
   margin: 0 0 0.25rem;
 }
@@ -250,11 +384,11 @@ select {
 input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 input:disabled {
-  background: #f3f4f6;
+  background: var(--secondary);
   color: var(--muted);
   cursor: not-allowed;
 }
@@ -265,6 +399,7 @@ input:disabled {
   gap: 0.5rem;
 }
 
+/* ---------- 6. Buttons ---------- */
 button {
   font-family: inherit;
 }
@@ -329,6 +464,7 @@ button {
   margin-bottom: 1.5rem;
 }
 
+/* ---------- 7. Cards ---------- */
 .card {
   background: var(--card);
   padding: 1.25rem;
@@ -381,6 +517,7 @@ button {
   max-width: 420px;
 }
 
+/* ---------- 8. Lists ---------- */
 .list {
   list-style: none;
   padding: 0;
@@ -437,6 +574,7 @@ button {
   margin: 0;
 }
 
+/* ---------- 9. Calendar ---------- */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -466,7 +604,7 @@ button {
 
 .calendar-cell.other-month {
   color: var(--muted);
-  background: #f9fafb;
+  background: var(--secondary);
 }
 
 .calendar-cell.today {
@@ -515,6 +653,7 @@ button {
   font-weight: 600;
 }
 
+/* ---------- 10. Tables ---------- */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -532,7 +671,7 @@ button {
 }
 
 .table th {
-  background: #f9fafb;
+  background: var(--secondary);
   font-size: 0.9rem;
   color: var(--muted);
 }
@@ -541,6 +680,7 @@ button {
   border-bottom: none;
 }
 
+/* ---------- 11. Tabs ---------- */
 .tasks-tabs,
 .admin-tabs {
   display: flex;
@@ -648,15 +788,15 @@ button {
 }
 
 .month-item.event {
-  background: #dbeafe;
-  color: #1e40af;
-  border-left: 3px solid #3b82f6;
+  background: var(--cal-event-bg);
+  color: var(--cal-event-text);
+  border-left: 3px solid var(--cal-event-border);
 }
 
 .month-item.task {
-  background: #dcfce7;
-  color: #166534;
-  border-left: 3px solid #22c55e;
+  background: var(--cal-task-bg);
+  color: var(--cal-task-text);
+  border-left: 3px solid var(--cal-task-border);
 }
 
 .month-item.task.completed {
@@ -684,7 +824,7 @@ button {
 .timegrid-header {
   display: flex;
   border-bottom: 1px solid var(--secondary);
-  background: #f9fafb;
+  background: var(--secondary);
 }
 
 .timegrid-corner {
@@ -760,8 +900,8 @@ button {
 
 .timegrid-task-chip {
   font-size: 0.75rem;
-  background: #dcfce7;
-  color: #166534;
+  background: var(--cal-task-bg);
+  color: var(--cal-task-text);
   padding: 0.15rem 0.35rem;
   border-radius: 4px;
   white-space: nowrap;
@@ -784,7 +924,7 @@ button {
   width: 60px;
   flex-shrink: 0;
   border-right: 1px solid var(--secondary);
-  background: #f9fafb;
+  background: var(--secondary);
 }
 
 .timegrid-days-wrap {
@@ -814,7 +954,7 @@ button {
 }
 
 .timegrid-day-col.today {
-  background: rgba(79, 70, 229, 0.03);
+  background: var(--color-primary-subtle);
 }
 
 .timegrid-event-block {
@@ -850,6 +990,7 @@ button {
   position: relative;
 }
 
+/* ---------- 12. Profile Dropdown ---------- */
 .profile-btn {
   display: flex;
   align-items: center;
@@ -943,12 +1084,12 @@ button {
   justify-content: center;
   border-radius: 6px;
   font-size: 0.8rem;
-  background: #f3f4f6;
+  background: var(--secondary);
   color: var(--muted);
 }
 
 .streak-day.studied {
-  background: #f97316;
+  background: var(--color-accent);
   color: #fff;
   font-weight: 700;
 }
@@ -1103,19 +1244,19 @@ button {
 }
 
 .shape-bg {
-  fill: #d8ddd8;
+  fill: var(--cal-shape-default);
 }
 
 .calendar-day.school-day .shape-bg {
-  fill: #a8d5c3;
+  fill: var(--cal-shape-school);
 }
 
 .calendar-day.family-day .shape-bg {
-  fill: #f4c2c2;
+  fill: var(--cal-shape-family);
 }
 
 .calendar-day.work-day .shape-bg {
-  fill: #f3e5ab;
+  fill: var(--cal-shape-work);
 }
 
 .mood-badge {
@@ -1445,13 +1586,13 @@ button {
 }
 
 .calendar-day-chip.event {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--cal-event-bg);
+  color: var(--cal-event-text);
 }
 
 .calendar-day-chip.task {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--cal-task-bg);
+  color: var(--cal-task-text);
   cursor: pointer;
 }
 
@@ -1656,7 +1797,7 @@ button {
   --lb-blue: var(--primary);
   --lb-blue-dark: var(--primary-hover);
   --lb-green: var(--success);
-  --lb-gold: #f59e0b;
+  --lb-gold: var(--color-accent);
   --lb-ink: var(--text);
   --lb-muted: var(--muted);
   --lb-card: rgba(255, 255, 255, 0.82);
@@ -1765,7 +1906,7 @@ button {
 }
 
 .lb-podium-card.first::before {
-  background: linear-gradient(90deg, var(--lb-gold), #fbbf24, var(--lb-gold));
+  background: linear-gradient(90deg, var(--lb-gold), color-mix(in srgb, var(--lb-gold) 75%, #fff), var(--lb-gold));
 }
 
 .lb-podium-card.first::after {
@@ -2101,7 +2242,7 @@ button {
 }
 
 .lb-trend.lb-down {
-  color: #ef4444;
+  color: var(--danger);
 }
 
 .lb-trend.lb-glow.lb-up {
@@ -2111,7 +2252,7 @@ button {
 
 .lb-trend.lb-ultra {
   color: #fff;
-  background: linear-gradient(90deg, #f59e0b, #ef4444, #8b5cf6, #2563eb, #10b981, #f59e0b);
+  background: linear-gradient(90deg, var(--color-accent), #ef4444, #8b5cf6, #2563eb, #10b981, var(--color-accent));
   background-size: 300% 100%;
   animation: lbUltraShift 2.2s linear infinite, lbUltraPulse 1s ease-in-out infinite;
   box-shadow: 0 0 10px rgba(239, 68, 68, 0.55);
@@ -2211,14 +2352,14 @@ button {
 }
 
 .lb-podium-card.first.lb-pulse {
-  box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.35), 0 18px 44px rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-accent) 35%, transparent), 0 18px 44px color-mix(in srgb, var(--color-accent) 45%, transparent);
 }
 
 .lb-sparkle {
   position: fixed;
   pointer-events: none;
-  color: #fbbf24;
-  text-shadow: 0 0 8px rgba(251, 191, 36, 0.95), 0 0 16px rgba(245, 158, 11, 0.6);
+  color: var(--color-accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 95%, transparent), 0 0 16px color-mix(in srgb, var(--color-accent) 60%, transparent);
   opacity: 0;
   will-change: transform, opacity;
   z-index: 50;
