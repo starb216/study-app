@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+.node/
+
+# Database
+study_app.db
+*.db
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
