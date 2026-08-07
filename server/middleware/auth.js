@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { get } = require('../db');
-const JWT_SECRET = 'studymint-secret';
+const JWT_SECRET = process.env.JWT_SECRET || 'studymint-secret';
 
 async function authMiddleware(req, res, next) {
   const authHeader = req.headers.authorization;
