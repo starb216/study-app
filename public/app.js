@@ -199,6 +199,7 @@ function setUser(user, token) {
 function updateAdminNav() {
   const isAdmin = currentUser && currentUser.is_admin;
   document.getElementById('adminNavLink').classList.toggle('hidden', !isAdmin);
+  if (window.updateChatAdminAccess) window.updateChatAdminAccess();
 }
 
 function requestNotificationPermission() {

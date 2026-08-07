@@ -4,7 +4,7 @@
    Wrapped in an IIFE so nothing leaks into app.js globals.
    All DOM queries are scoped to #chatView; data stays in
    localStorage under the studyChat_* keys (per-browser,
-   separate from Studymint accounts).
+   separate from StudyMint accounts).
    ============================================================ */
 (function () {
   const chatView = document.getElementById('chatView');
@@ -16,6 +16,22 @@
   const authorInput = document.getElementById('authorInput');
   const sendBtn = document.getElementById('sendBtn');
   const selectedDisplay = document.getElementById('selectedDisplay');
+
+  // Admin gating: chat admin features follow the Studymint app's own admin
+  // flag (currentUser from app.js — a top-level `let`, readable cross-script).
+  function isChatAdmin() {
+    try {
+      if (typeof currentUser !== 'undefined' && currentUser && currentUser.is_admin) return true;
+    } catch (e) {
+      // app.js globals unavailable (e.g. chat markup used standalone) — fall through
+    }
+    return localStorage.getItem('isAdmin') === '1';
+  }
+
+  window.updateChatAdminAccess = function () {
+    const btn = document.getElementById('adminBtn');
+    if (btn) btn.classList.toggle('hidden', !isChatAdmin());
+  };
 
   const STORAGE_KEY = 'studyChat_messages_v1';
   const PENDING_SUBJECTS_KEY = 'studyChat_pendingSubjects_v1';
@@ -693,7 +709,10 @@
     if (e.key === 'Enter') prohibitUserBtn.click();
   });
 
-  document.getElementById('adminBtn').addEventListener('click', openAdminModal);
+  document.getElementById('adminBtn').addEventListener('click', () => {
+    if (!isChatAdmin()) return;
+    openAdminModal();
+  });
   document.getElementById('closeAdminBtn').addEventListener('click', closeAdminModal);
   adminModal.addEventListener('click', (e) => {
     if (e.target === adminModal) closeAdminModal();
@@ -716,19 +735,23 @@
     });
     userPopup.appendChild(reportBtn);
 
-    const prohibited = isUserProhibited(user);
-    const prohibitBtn = document.createElement('button');
-    prohibitBtn.className = prohibited ? 'unprohibit-btn' : 'prohibit-btn';
-    prohibitBtn.textContent = prohibited ? 'Un-prohibit user' : 'Prohibit user';
-    prohibitBtn.addEventListener('click', () => {
-      if (prohibited) unprohibitUser(user);
-      else prohibitUser(user);
-      userPopup.remove();
-      userPopup = null;
-      loadChat(selectedCategory);
-      renderProhibitedList();
-    });
-    userPopup.appendChild(prohibitBtn);
+    // Prohibit/unprohibit manages the same store as the admin review modal —
+    // only offer it to app admins.
+    if (isChatAdmin()) {
+      const prohibited = isUserProhibited(user);
+      const prohibitBtn = document.createElement('button');
+      prohibitBtn.className = prohibited ? 'unprohibit-btn' : 'prohibit-btn';
+      prohibitBtn.textContent = prohibited ? 'Un-prohibit user' : 'Prohibit user';
+      prohibitBtn.addEventListener('click', () => {
+        if (prohibited) unprohibitUser(user);
+        else prohibitUser(user);
+        userPopup.remove();
+        userPopup = null;
+        loadChat(selectedCategory);
+        renderProhibitedList();
+      });
+      userPopup.appendChild(prohibitBtn);
+    }
 
     userPopup.style.left = `${x}px`;
     userPopup.style.top = `${y}px`;
@@ -831,5 +854,6 @@
   attachReportButtons();
   attachMentionDots();
   updateMentionDots();
+  updateChatAdminAccess();
   loadChat(selectedCategory);
 })();
