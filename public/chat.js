@@ -1,10 +1,9 @@
 /* ============================================================
    CHAT PANEL (#chatView)
-   Ported from the standalone study-chat page (inline <script>).
-   Wrapped in an IIFE so nothing leaks into app.js globals.
-   All DOM queries are scoped to #chatView; data stays in
-   localStorage under the studyChat_* keys (per-browser,
-   separate from StudyMint accounts).
+   Server-backed chat: messages are stored in the StudyMint
+   database via /api/chat so other users can see them.
+   Moderation data (custom subjects, reports, prohibited users,
+   mention read-state) is still stored locally per browser.
    ============================================================ */
 (function () {
   const chatView = document.getElementById('chatView');
@@ -33,23 +32,120 @@
     if (btn) btn.classList.toggle('hidden', !isChatAdmin());
   };
 
-  const STORAGE_KEY = 'studyChat_messages_v1';
+  /* ---------- Server chat API ---------- */
+
+  function getToken() {
+    return localStorage.getItem('token');
+  }
+
+  async function chatApi(path, options = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
+      ...options.headers
+    };
+    const res = await fetch(`/api${path}`, { ...options, headers });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(data?.error || `Request failed (${res.status})`);
+    }
+    return data;
+  }
+
+  const messagesCache = {};
+
+  function extractMentions(text) {
+    const matches = String(text || '').match(/@([\w\s-]+)/g) || [];
+    return matches.map(m => m.slice(1).trim()).filter(Boolean);
+  }
+
+  function normalizeMessage(m) {
+    return {
+      id: m.id,
+      user_id: m.user_id,
+      username: m.username,
+      author: m.username,
+      category: m.category,
+      text: m.text,
+      timestamp: m.created_at ? new Date(m.created_at).getTime() : Date.now(),
+      mentions: extractMentions(m.text)
+    };
+  }
+
+  function getMessages(category) {
+    return messagesCache[category] || [];
+  }
+
+  async function loadChat(category, { silent = false } = {}) {
+    try {
+      const rows = await chatApi(`/chat?category=${encodeURIComponent(category)}`);
+      messagesCache[category] = rows.map(normalizeMessage);
+    } catch (err) {
+      if (!silent) console.warn('Chat load failed:', err.message);
+    }
+    renderMessages(category);
+    setCategorySeen(category);
+    updateMentionDots();
+  }
+
+  async function saveMessage(text, category) {
+    const message = await chatApi('/chat', {
+      method: 'POST',
+      body: JSON.stringify({ category, text })
+    });
+    const normalized = normalizeMessage(message);
+    if (!messagesCache[category]) messagesCache[category] = [];
+    messagesCache[category].push(normalized);
+    return normalized;
+  }
+
+  function renderMessages(category) {
+    chatBox.innerHTML = '';
+    const messages = getMessages(category);
+    if (messages.length === 0) {
+      chatBox.innerHTML = `<div class="empty-state">No messages in ${category.replace(/</g, '&lt;')} yet. Start the conversation!</div>`;
+    } else {
+      messages.forEach((m) => chatBox.appendChild(renderMessage(m)));
+    }
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+
+  function renderMessage(message) {
+    const author = (message.author || 'Anonymous').replace(/</g, '&lt;');
+    const prohibited = isUserProhibited(message.author || 'Anonymous');
+    const isOwn = typeof currentUser !== 'undefined' && currentUser && currentUser.id === message.user_id;
+    const msg = document.createElement('div');
+    msg.className = 'message' + (isOwn ? ' own' : '');
+    msg.dataset.id = message.id;
+    msg.dataset.userId = message.user_id;
+    msg.innerHTML = `
+      <div class="message-header">
+        <span class="message-author${prohibited ? ' prohibited' : ''}" data-author="${author}">${author}</span>
+        <span class="message-category">${message.category.replace(/</g, '&lt;')}</span>
+      </div>
+      <div class="message-text">${message.text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>
+    `;
+    return msg;
+  }
+
+  function setActiveCategory(el) {
+    chatView.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
+    chatView.querySelectorAll('.subcategory').forEach(s => s.classList.remove('active'));
+    chatView.querySelectorAll('.nested-item').forEach(n => n.classList.remove('active'));
+    el.classList.add('active');
+    selectedCategory = el.dataset.category;
+    selectedDisplay.textContent = selectedCategory;
+    loadChat(selectedCategory);
+  }
+
   const PENDING_SUBJECTS_KEY = 'studyChat_pendingSubjects_v1';
   const PENDING_DELETIONS_KEY = 'studyChat_pendingDeletions_v1';
   const PENDING_REPORTS_KEY = 'studyChat_pendingReports_v1';
   const CUSTOM_SUBJECTS_KEY = 'studyChat_customSubjects_v1';
   const PROHIBITED_USERS_KEY = 'studyChat_prohibitedUsers_v1';
+  const MENTIONS_SEEN_KEY = 'studyChat_mentionsSeen_v1';
   const BUILTIN_CATEGORIES = ['General','Study tip','Study experience','Math','Science','Computer science','English','Mandarin Chinese','Spanish','French','Arabic','Portuguese','History','Oral History','Ancient History','Modern History'];
   let selectedCategory = 'General';
-
-  function getMessagesMap() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
-    catch { return {}; }
-  }
-
-  function saveMessagesMap(map) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  }
 
   function getProhibitedUsers() {
     try { return JSON.parse(localStorage.getItem(PROHIBITED_USERS_KEY)) || []; }
@@ -76,69 +172,6 @@
   function unprohibitUser(name) {
     const list = getProhibitedUsers().filter(u => u.toLowerCase() !== name.trim().toLowerCase());
     saveProhibitedUsers(list);
-  }
-
-  function getMessages(category) {
-    return getMessagesMap()[category] || [];
-  }
-
-  function extractMentions(text) {
-    const matches = text.match(/@([\w\s-]+)/g) || [];
-    return matches.map(m => m.slice(1).trim()).filter(Boolean);
-  }
-
-  function saveMessage(text, category, author) {
-    const map = getMessagesMap();
-    if (!map[category]) map[category] = [];
-    const message = {
-      text,
-      author: author || 'Anonymous',
-      category,
-      timestamp: Date.now(),
-      mentions: extractMentions(text)
-    };
-    map[category].push(message);
-    saveMessagesMap(map);
-    return message;
-  }
-
-  function renderMessage(message, index) {
-    const author = (message.author || 'Anonymous').replace(/</g, '&lt;');
-    const prohibited = isUserProhibited(message.author || 'Anonymous');
-    const msg = document.createElement('div');
-    msg.className = 'message own';
-    msg.dataset.index = index;
-    msg.innerHTML = `
-      <div class="message-header">
-        <span class="message-author${prohibited ? ' prohibited' : ''}" data-author="${author}">${author}</span>
-        <span class="message-category">${message.category.replace(/</g, '&lt;')}</span>
-      </div>
-      <div class="message-text">${message.text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div>
-    `;
-    return msg;
-  }
-
-  function loadChat(category) {
-    chatBox.innerHTML = '';
-    const messages = getMessages(category);
-    if (messages.length === 0) {
-      chatBox.innerHTML = `<div class="empty-state">No messages in ${category.replace(/</g, '&lt;')} yet. Start the conversation!</div>`;
-    } else {
-      messages.forEach((m, i) => chatBox.appendChild(renderMessage(m, i)));
-    }
-    chatBox.scrollTop = chatBox.scrollHeight;
-    setCategorySeen(category);
-    updateMentionDots();
-  }
-
-  function setActiveCategory(el) {
-    chatView.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
-    chatView.querySelectorAll('.subcategory').forEach(s => s.classList.remove('active'));
-    chatView.querySelectorAll('.nested-item').forEach(n => n.classList.remove('active'));
-    el.classList.add('active');
-    selectedCategory = el.dataset.category;
-    selectedDisplay.textContent = selectedCategory;
-    loadChat(selectedCategory);
   }
 
   categoryList.addEventListener('click', (e) => {
@@ -208,19 +241,30 @@
     });
   });
 
-  function sendMessage() {
+  async function sendMessage() {
     const text = chatInput.value.trim();
     if (!text) return;
-    const author = authorInput.value.trim() || 'Anonymous';
+    const author = getCurrentUserName();
     if (isUserProhibited(author)) {
       alert('Your account is prohibited from sending messages.');
       return;
     }
-    saveMessage(text, selectedCategory, author);
-    loadChat(selectedCategory);
-    updateMentionDots();
-    chatInput.value = '';
-    chatInput.focus();
+    if (!getToken()) {
+      alert('Please log in to send messages.');
+      return;
+    }
+    sendBtn.disabled = true;
+    try {
+      await saveMessage(text, selectedCategory);
+      await loadChat(selectedCategory, { silent: true });
+      updateMentionDots();
+      chatInput.value = '';
+      chatInput.focus();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      sendBtn.disabled = false;
+    }
   }
 
   sendBtn.addEventListener('click', sendMessage);
@@ -323,8 +367,6 @@
     });
   }
 
-  const MENTIONS_SEEN_KEY = 'studyChat_mentionsSeen_v1';
-
   function getMentionsSeen() {
     try { return JSON.parse(localStorage.getItem(MENTIONS_SEEN_KEY)) || {}; }
     catch { return {}; }
@@ -337,18 +379,21 @@
   }
 
   function getCurrentUserName() {
+    try {
+      if (typeof currentUser !== 'undefined' && currentUser && currentUser.username) return currentUser.username;
+    } catch (e) { /* ignore */ }
     return (authorInput.value || 'Anonymous').trim();
   }
 
   function hasUnreadMentions(category) {
-    const currentUser = getCurrentUserName();
-    if (!currentUser || currentUser === 'Anonymous') return false;
+    const currentName = getCurrentUserName();
+    if (!currentName || currentName === 'Anonymous') return false;
     const seen = getMentionsSeen();
     const lastSeen = seen[category] || 0;
     const messages = getMessages(category);
     return messages.some(m => {
       const mentions = m.mentions || extractMentions(m.text);
-      return mentions.some(name => name.toLowerCase() === currentUser.toLowerCase()) && m.timestamp > lastSeen;
+      return mentions.some(name => name.toLowerCase() === currentName.toLowerCase()) && m.timestamp > lastSeen;
     });
   }
 
@@ -735,8 +780,6 @@
     });
     userPopup.appendChild(reportBtn);
 
-    // Prohibit/unprohibit manages the same store as the admin review modal —
-    // only offer it to app admins.
     if (isChatAdmin()) {
       const prohibited = isUserProhibited(user);
       const prohibitBtn = document.createElement('button');
@@ -775,7 +818,7 @@
   // Quote / delete feature: double-click a message
   let quotePopup = null;
 
-  function showQuotePopup(text, x, y, messageIndex, author) {
+  function showQuotePopup(text, x, y, messageId, author, messageUserId) {
     if (quotePopup) quotePopup.remove();
     quotePopup = document.createElement('div');
     quotePopup.className = 'quote-popup';
@@ -800,30 +843,32 @@
       quotePopup = null;
     });
 
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'delete-quote';
-    deleteBtn.textContent = 'Delete';
-    deleteBtn.addEventListener('click', () => {
-      if (!confirm('Delete this message?')) {
-        quotePopup.remove();
-        quotePopup = null;
-        return;
-      }
-      const map = getMessagesMap();
-      const list = map[selectedCategory] || [];
-      if (messageIndex >= 0 && messageIndex < list.length) {
-        list.splice(messageIndex, 1);
-        map[selectedCategory] = list;
-        saveMessagesMap(map);
-        loadChat(selectedCategory);
-      }
-      quotePopup.remove();
-      quotePopup = null;
-    });
-
     quotePopup.appendChild(quoteBtn);
     quotePopup.appendChild(reportBtn);
-    quotePopup.appendChild(deleteBtn);
+
+    const canDelete = isChatAdmin() || (typeof currentUser !== 'undefined' && currentUser && String(currentUser.id) === String(messageUserId));
+    if (canDelete && messageId) {
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-quote';
+      deleteBtn.textContent = 'Delete';
+      deleteBtn.addEventListener('click', async () => {
+        if (!confirm('Delete this message?')) {
+          quotePopup.remove();
+          quotePopup = null;
+          return;
+        }
+        try {
+          await chatApi(`/chat/${messageId}`, { method: 'DELETE' });
+          await loadChat(selectedCategory, { silent: true });
+        } catch (err) {
+          alert(err.message);
+        }
+        quotePopup.remove();
+        quotePopup = null;
+      });
+      quotePopup.appendChild(deleteBtn);
+    }
+
     quotePopup.style.left = `${x}px`;
     quotePopup.style.top = `${y}px`;
     chatView.appendChild(quotePopup);
@@ -839,16 +884,31 @@
   chatBox.addEventListener('dblclick', (e) => {
     const msg = e.target.closest('.message');
     if (!msg) return;
-    const allMessages = [...chatBox.querySelectorAll('.message')];
-    const index = allMessages.indexOf(msg);
     const selected = window.getSelection().toString().trim();
     const text = selected || msg.querySelector('.message-text').textContent;
     const author = msg.querySelector('.message-author')?.textContent || 'Anonymous';
     if (!text) return;
-    showQuotePopup(text, e.clientX, e.clientY, index, author);
+    showQuotePopup(text, e.clientX, e.clientY, msg.dataset.id, author, msg.dataset.userId);
   });
 
+  // Prefill author input with the logged-in username (server uses account name)
+  function syncAuthorInput() {
+    const name = getCurrentUserName();
+    if (name && name !== 'Anonymous' && authorInput.value !== name) {
+      authorInput.value = name;
+    }
+  }
+
+  // Poll for new messages so other users' messages appear
+  setInterval(() => {
+    if (!chatView.classList.contains('hidden')) {
+      syncAuthorInput();
+      loadChat(selectedCategory, { silent: true });
+    }
+  }, 3000);
+
   // Initial render
+  syncAuthorInput();
   renderCustomSubjects();
   attachDeleteButtons();
   attachReportButtons();

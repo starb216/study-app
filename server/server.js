@@ -18,6 +18,7 @@ app.use('/api/sleep', require('./routes/sleep'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/users', require('./routes/users'));
+app.use('/api/chat', require('./routes/chat'));
 app.use('/api/admin', require('./routes/admin'));
 
 app.get('/*path', (req, res) => {

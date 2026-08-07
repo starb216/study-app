@@ -225,6 +225,26 @@ const CREATE_FRIENDS = usePostgres
       FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
     )`;
 
+const CREATE_CHAT_MESSAGES = usePostgres
+  ? `CREATE TABLE IF NOT EXISTS chat_messages (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      username TEXT NOT NULL,
+      category TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`
+  : `CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      username TEXT NOT NULL,
+      category TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`;
+
 async function init() {
   await run(CREATE_USERS);
 
@@ -260,6 +280,7 @@ async function init() {
   await run(CREATE_SESSIONS);
   await run(CREATE_SLEEP);
   await run(CREATE_FRIENDS);
+  await run(CREATE_CHAT_MESSAGES);
 }
 
 module.exports = { db, run, get, all, init };
