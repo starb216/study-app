@@ -2,7 +2,7 @@
    STUDYMINT DESIGN SYSTEM
    ============================================================
    This file defines all visual tokens and components for
-   Studymint. Colors are controlled via CSS custom properties
+   StudyMint. Colors are controlled via CSS custom properties
    and overridden per theme using [data-theme].
    ============================================================ */
 
@@ -3061,6 +3061,69 @@ button {
   font-size: 0.9375rem;
 }
 
+/* ---------- Sleep Animations ---------- */
+@keyframes sleepFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sleepRiseIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sleepPopIn {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sleepSlideIn {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.sleep-header {
+  animation: sleepFadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sleep-stat {
+  animation: sleepRiseIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sleep-stat:nth-child(1) { animation-delay: 0ms; }
+.sleep-stat:nth-child(2) { animation-delay: 60ms; }
+.sleep-stat:nth-child(3) { animation-delay: 120ms; }
+.sleep-stat:nth-child(4) { animation-delay: 180ms; }
+
+.sleep-timeline-card {
+  animation: sleepRiseIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+.timeline-marker {
+  animation: sleepPopIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.45s both;
+}
+
+.sleep-presets {
+  animation: sleepSlideIn 0.55s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+}
+
+.preset-btn {
+  animation: sleepPopIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.preset-btn:nth-child(2) { animation-delay: 0.3s; }
+.preset-btn:nth-child(3) { animation-delay: 0.36s; }
+.preset-btn:nth-child(4) { animation-delay: 0.42s; }
+.preset-btn:nth-child(5) { animation-delay: 0.48s; }
+
+.sleep-form {
+  animation: sleepFadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.35s both;
+}
+
+.timeline-sleep {
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1), left 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @media (max-width: 768px) {
   #sleepCountdown {
     font-size: 2.25rem;
@@ -3169,7 +3232,7 @@ button {
    CHAT PANEL (#chatView)
    Ported from the standalone study-chat page. Every selector is
    scoped under #chatView so nothing leaks into the rest of the app.
-   Uses the global Studymint tokens defined at the top of this file.
+   Uses the global StudyMint tokens defined at the top of this file.
    ============================================================ */
 
 /* Layout glue: replaces the standalone's body { display:flex; height:100vh } */
