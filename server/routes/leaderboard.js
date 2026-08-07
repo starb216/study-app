@@ -4,27 +4,16 @@ const auth = require('../middleware/auth');
 
 const router = express.Router();
 
-const MONTHLY_CTE = `
-  WITH monthly AS (
-    SELECT
-      u.id,
-      u.username,
-      u.currency AS total,
-      COALESCE(SUM(s.currency_earned), 0) AS points,
-      COUNT(s.id) AS sessions,
-      COALESCE(AVG(s.duration_minutes), 0) AS avgMinutes
-    FROM users u
-    LEFT JOIN study_sessions s ON s.user_id = u.id
-      AND TO_CHAR(s.ended_at, 'YYYY-MM') = TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM')
-    GROUP BY u.id
-  )
-`;
+function formatDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
-const STUDY_DAYS_SQL = `
-  SELECT DISTINCT user_id, ended_at::date AS day
-  FROM study_sessions
-  ORDER BY user_id, day DESC
-`;
+function getMonthRange() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return [start.toISOString(), end.toISOString()];
+}
 
 function computeStreak(days) {
   if (days.length === 0) return 0;
@@ -44,16 +33,13 @@ function computeStreak(days) {
   return streak;
 }
 
-function formatDate(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
 async function getStudyDaysMap() {
-  const rows = await all(STUDY_DAYS_SQL);
+  const rows = await all('SELECT DISTINCT user_id, ended_at FROM study_sessions ORDER BY user_id, ended_at DESC');
   const map = {};
   rows.forEach((r) => {
     if (!map[r.user_id]) map[r.user_id] = [];
-    map[r.user_id].push(r.day);
+    const day = formatDate(new Date(r.ended_at));
+    if (!map[r.user_id].includes(day)) map[r.user_id].push(day);
   });
   return map;
 }
@@ -72,25 +58,59 @@ function enrichLeader(rows, daysMap, withRank = false) {
 }
 
 async function getMonthlyLeaders(limit = 20) {
+  const [monthStart, monthEnd] = getMonthRange();
   const [leaders, daysMap] = await Promise.all([
-    all(`${MONTHLY_CTE} SELECT * FROM monthly ORDER BY points DESC, username ASC LIMIT ?`, [limit]),
+    all(
+      `
+      WITH monthly AS (
+        SELECT
+          u.id,
+          u.username,
+          u.currency AS total,
+          COALESCE(SUM(s.currency_earned), 0) AS points,
+          COUNT(s.id) AS sessions,
+          COALESCE(AVG(s.duration_minutes), 0) AS avgMinutes
+        FROM users u
+        LEFT JOIN study_sessions s ON s.user_id = u.id
+          AND s.ended_at >= ? AND s.ended_at < ?
+        GROUP BY u.id
+      )
+      SELECT * FROM monthly ORDER BY points DESC, username ASC LIMIT ?
+      `,
+      [monthStart, monthEnd, limit]
+    ),
     getStudyDaysMap()
   ]);
   return enrichLeader(leaders, daysMap, true);
 }
 
 async function getFriendsLeaders(userId) {
+  const [monthStart, monthEnd] = getMonthRange();
   const [rows, daysMap] = await Promise.all([
     all(
-      `${MONTHLY_CTE}
+      `
+      WITH monthly AS (
+        SELECT
+          u.id,
+          u.username,
+          u.currency AS total,
+          COALESCE(SUM(s.currency_earned), 0) AS points,
+          COUNT(s.id) AS sessions,
+          COALESCE(AVG(s.duration_minutes), 0) AS avgMinutes
+        FROM users u
+        LEFT JOIN study_sessions s ON s.user_id = u.id
+          AND s.ended_at >= ? AND s.ended_at < ?
+        GROUP BY u.id
+      )
       SELECT * FROM monthly
       WHERE id = ? OR id IN (
         SELECT CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END
         FROM friends f
         WHERE (f.requester_id = ? OR f.addressee_id = ?) AND f.status = 'accepted'
       )
-      ORDER BY points DESC, username ASC`,
-      [userId, userId, userId, userId]
+      ORDER BY points DESC, username ASC
+      `,
+      [monthStart, monthEnd, userId, userId, userId, userId]
     ),
     getStudyDaysMap()
   ]);
@@ -144,15 +164,21 @@ router.get('/streaks', async (req, res) => {
       SELECT
         u.id,
         u.username,
-        COUNT(DISTINCT s.ended_at::date) AS study_days
+        s.ended_at
       FROM users u
       LEFT JOIN study_sessions s ON s.user_id = u.id
-      GROUP BY u.id
-      ORDER BY study_days DESC, u.username ASC
-      LIMIT 20
+      ORDER BY u.id
       `
     );
-    const leaders = rows.map((r) => ({ ...r, streak: r.study_days }));
+    const map = {};
+    rows.forEach((r) => {
+      if (!map[r.id]) map[r.id] = { id: r.id, username: r.username, days: new Set() };
+      if (r.ended_at) map[r.id].days.add(formatDate(new Date(r.ended_at)));
+    });
+    const leaders = Object.values(map)
+      .map((r) => ({ id: r.id, username: r.username, streak: r.days.size }))
+      .sort((a, b) => b.streak - a.streak || a.username.localeCompare(b.username))
+      .slice(0, 20);
     res.json(leaders);
   } catch (err) {
     console.error('Streaks leaderboard error:', err.message);
@@ -168,7 +194,7 @@ router.get('/friends/streaks', auth, async (req, res) => {
       SELECT
         u.id,
         u.username,
-        COUNT(DISTINCT s.ended_at::date) AS study_days
+        s.ended_at
       FROM users u
       LEFT JOIN study_sessions s ON s.user_id = u.id
       WHERE u.id = ? OR u.id IN (
@@ -176,13 +202,19 @@ router.get('/friends/streaks', auth, async (req, res) => {
         FROM friends f
         WHERE (f.requester_id = ? OR f.addressee_id = ?) AND f.status = 'accepted'
       )
-      GROUP BY u.id
-      ORDER BY study_days DESC, u.username ASC
-      LIMIT 20
+      ORDER BY u.id
       `,
       [req.userId, req.userId, req.userId, req.userId]
     );
-    const leaders = rows.map((r) => ({ ...r, streak: r.study_days }));
+    const map = {};
+    rows.forEach((r) => {
+      if (!map[r.id]) map[r.id] = { id: r.id, username: r.username, days: new Set() };
+      if (r.ended_at) map[r.id].days.add(formatDate(new Date(r.ended_at)));
+    });
+    const leaders = Object.values(map)
+      .map((r) => ({ id: r.id, username: r.username, streak: r.days.size }))
+      .sort((a, b) => b.streak - a.streak || a.username.localeCompare(b.username))
+      .slice(0, 20);
     res.json(leaders);
   } catch (err) {
     console.error('Friends streaks leaderboard error:', err.message);

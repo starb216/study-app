@@ -120,10 +120,10 @@ router.get('/balance', auth, async (req, res) => {
 router.get('/streaks', auth, async (req, res) => {
   try {
     const sessions = await all(
-      "SELECT DISTINCT ended_at::date AS day FROM study_sessions WHERE user_id = ? ORDER BY day DESC",
+      'SELECT DISTINCT ended_at FROM study_sessions WHERE user_id = ? ORDER BY ended_at DESC',
       [req.userId]
     );
-    const days = sessions.map((s) => s.day);
+    const days = [...new Set(sessions.map((s) => formatDate(new Date(s.ended_at))))];
     const { currentStreak, longestStreak } = computeStreaks(days);
     res.json({ current_streak: currentStreak, longest_streak: longestStreak, study_days: days });
   } catch (err) {

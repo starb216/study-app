@@ -155,6 +155,28 @@ function showMessage(text, type = 'error') {
   setTimeout(() => el.classList.add('hidden'), 4000);
 }
 
+function renderAvatar(avatar, targetId = 'profileAvatar') {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  if (!avatar) {
+    el.textContent = '👤';
+    el.style.backgroundImage = '';
+    el.classList.remove('has-image');
+    return;
+  }
+  if (avatar.startsWith('data:')) {
+    el.textContent = '';
+    el.style.backgroundImage = `url(${avatar})`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+    el.classList.add('has-image');
+  } else {
+    el.textContent = avatar;
+    el.style.backgroundImage = '';
+    el.classList.remove('has-image');
+  }
+}
+
 function setUser(user, token) {
   currentUser = user;
   if (token) {
@@ -164,6 +186,7 @@ function setUser(user, token) {
   }
   document.getElementById('dashUser').textContent = user.username;
   document.getElementById('profileName').textContent = user.username;
+  renderAvatar(user.avatar, 'profileAvatar');
   document.getElementById('mainNav').classList.remove('hidden');
   updateAdminNav();
   requestNotificationPermission();
@@ -315,12 +338,13 @@ async function initAuth() {
       localStorage.removeItem('token');
       return;
     }
-    const balance = await api('/study/balance');
-    const username = localStorage.getItem('username') || 'Student';
-    const isAdmin = payload.isAdmin === 1 || payload.isAdmin === true || localStorage.getItem('isAdmin') === '1';
-    currentUser = { id: payload.userId, username, currency: balance.balance, is_admin: isAdmin };
+    const [balance, me] = await Promise.all([api('/study/balance'), api('/users/me')]);
+    const username = me.username || localStorage.getItem('username') || 'Student';
+    const isAdmin = me.is_admin === 1 || payload.isAdmin === 1 || payload.isAdmin === true || localStorage.getItem('isAdmin') === '1';
+    currentUser = { id: payload.userId, username, currency: balance.balance, is_admin: isAdmin, avatar: me.avatar || null };
     document.getElementById('dashUser').textContent = username;
     document.getElementById('profileName').textContent = username;
+    renderAvatar(me.avatar, 'profileAvatar');
     document.getElementById('mainNav').classList.remove('hidden');
     updateAdminNav();
     requestNotificationPermission();
@@ -403,6 +427,9 @@ async function loadSettings() {
     const user = await api('/users/me');
     document.getElementById('settingsUsername').value = user.username;
     document.getElementById('settingsEmail').value = user.email;
+    renderAvatar(user.avatar, 'avatarPreview');
+    updateAvatarSelection(user.avatar);
+    if (currentUser) currentUser.avatar = user.avatar || null;
   } catch {}
 }
 
@@ -423,6 +450,103 @@ function setupTheme() {
   select.addEventListener('change', (e) => {
     applyTheme(e.target.value);
   });
+}
+
+const DEFAULT_AVATARS = ['🐱', '🐶', '🐿️', '🐰', '🐯', '🐻', '🦊', '🐼', '🦁', '🐸', '🐙', '🦋'];
+
+function updateAvatarSelection(avatar) {
+  document.querySelectorAll('#avatarGrid button').forEach((btn) => {
+    btn.classList.toggle('selected', btn.dataset.avatar === avatar);
+  });
+}
+
+async function updateAvatar(avatar) {
+  try {
+    const user = await api('/users/avatar', {
+      method: 'PUT',
+      body: JSON.stringify({ avatar })
+    });
+    if (currentUser) currentUser.avatar = user.avatar || null;
+    renderAvatar(user.avatar, 'profileAvatar');
+    renderAvatar(user.avatar, 'avatarPreview');
+    updateAvatarSelection(user.avatar);
+    showMessage('Avatar updated', 'success');
+  } catch {}
+}
+
+function resizeImage(file, maxSize = 128, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const size = Math.min(img.width, img.height);
+        const sx = (img.width - size) / 2;
+        const sy = (img.height - size) / 2;
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, sx, sy, size, size, 0, 0, maxSize, maxSize);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleAvatarFile(file) {
+  if (!file) return;
+  if (!file.type.match(/image\/(png|jpeg|webp)/)) {
+    showMessage('Please use a JPG, PNG, or WebP image', 'error');
+    return;
+  }
+  if (file.size > 1024 * 1024) {
+    showMessage('Image must be smaller than 1 MB', 'error');
+    return;
+  }
+  try {
+    const dataUrl = await resizeImage(file, 128, 0.85);
+    await updateAvatar(dataUrl);
+  } catch {
+    showMessage('Failed to process image', 'error');
+  }
+}
+
+function setupAvatar() {
+  const grid = document.getElementById('avatarGrid');
+  if (!grid) return;
+
+  grid.addEventListener('click', (e) => {
+    if (e.target.dataset.avatar) {
+      updateAvatar(e.target.dataset.avatar);
+    }
+  });
+
+  const fileInput = document.getElementById('avatarFileInput');
+  const uploadBtn = document.getElementById('avatarUploadBtn');
+  const uploadZone = document.getElementById('avatarUploadZone');
+  const removeBtn = document.getElementById('avatarRemoveBtn');
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => handleAvatarFile(e.target.files[0]));
+
+  uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) handleAvatarFile(file);
+  });
+
+  removeBtn.addEventListener('click', () => updateAvatar(null));
 }
 
 function setupSettings() {
@@ -1781,7 +1905,7 @@ function buildSleepIcs(bedtime, wakeTime) {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Study App//Sleep Schedule//EN',
+    'PRODID:-//Studymint//Sleep Schedule//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
@@ -2138,6 +2262,14 @@ function stopSleepAlarmSound() {
   sleepAlarmAudioCtx = null;
 }
 
+function avatarHtml(avatar, size = '1.5rem') {
+  if (!avatar) return `<span class="friend-avatar" style="width:${size};height:${size};">👤</span>`;
+  if (avatar.startsWith('data:')) {
+    return `<span class="friend-avatar has-image" style="width:${size};height:${size};background-image:url(${avatar});"></span>`;
+  }
+  return `<span class="friend-avatar" style="width:${size};height:${size};">${avatar}</span>`;
+}
+
 async function loadFriends() {
   try {
     const [friends, pending] = await Promise.all([api('/friends'), api('/friends/pending')]);
@@ -2149,7 +2281,12 @@ async function loadFriends() {
     } else {
       friends.forEach((f) => {
         const li = document.createElement('li');
-        li.innerHTML = `<div><strong>${escapeHtml(f.username)}</strong> <small>· ${f.currency} 🐚</small></div>`;
+        li.innerHTML = `
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            ${avatarHtml(f.avatar, '2rem')}
+            <div><strong>${escapeHtml(f.username)}</strong> <small>· ${f.currency} 🐚</small></div>
+          </div>
+        `;
         friendList.appendChild(li);
       });
     }
@@ -2162,7 +2299,10 @@ async function loadFriends() {
       pending.forEach((p) => {
         const li = document.createElement('li');
         li.innerHTML = `
-          <div><strong>${escapeHtml(p.username)}</strong> <small>wants to be friends</small></div>
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            ${avatarHtml(p.avatar, '2rem')}
+            <div><strong>${escapeHtml(p.username)}</strong> <small>wants to be friends</small></div>
+          </div>
           <div class="actions">
             <button class="btn-primary respond-request" data-id="${p.id}" data-action="accept">Accept</button>
             <button class="btn-secondary respond-request" data-id="${p.id}" data-action="decline">Decline</button>
@@ -2236,7 +2376,7 @@ function renderLeaderboard(globalTop, friends, around) {
     return `
       <div class="lb-podium-card ${place === 0 ? 'first' : ''}" style="animation-delay: ${delay}s">
         <span class="lb-medal">${MEDALS[place]}</span>
-        <div class="lb-avatar">${lbInitials(f.name)}</div>
+        <div class="lb-avatar" ${lbAvatarStyle(f.avatar)}>${lbAvatarContent(f.avatar, f.name)}</div>
         <div class="lb-name">${escapeHtml(f.name)}</div>
         <div class="lb-score"><span class="lb-count" data-target="${f.points}">0</span> <span class="lb-pts">🌙</span></div>
         <div class="lb-sub">${f.sessions} sessions · ${f.avgMinutes} min avg · 🔥 ${f.streak}d<br>${f.total.toLocaleString()} 🌙 all-time</div>
@@ -2319,8 +2459,21 @@ function lbScore(f) {
   return f ? f.points : 0;
 }
 
-function lbInitials(name) {
-  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+function lbAvatarContent(avatar, name) {
+  if (!avatar) {
+    return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+  if (avatar.startsWith('data:')) {
+    return '';
+  }
+  return avatar;
+}
+
+function lbAvatarStyle(avatar) {
+  if (avatar && avatar.startsWith('data:')) {
+    return `style="background-image:url(${avatar});background-size:cover;background-position:center;"`;
+  }
+  return '';
 }
 
 function lbCompact(n) {
@@ -2341,7 +2494,7 @@ function lbRowHtml(f, i, rankLabel, rankTop, barMax, delay) {
       <div class="lb-bar" data-width="${(lbScore(f) / barMax) * 100}"></div>
       <span class="lb-rank ${rankTop ? 'lb-top' : ''}">${rankLabel}</span>
       <span class="lb-player">
-        <span class="lb-avatar lb-small">${lbInitials(f.name)}</span>
+        <span class="lb-avatar lb-small" ${lbAvatarStyle(f.avatar)}>${lbAvatarContent(f.avatar, f.name)}</span>
         <span class="lb-pname">${escapeHtml(f.name)}</span>${lbTrendHtml(f._trend, f._boosted, f._ultra)}${f.me ? '<span class="lb-you-tag">You</span>' : ''}
       </span>
       <span class="lb-num">${f.sessions} <span class="lb-unit">mo</span></span>
@@ -2729,6 +2882,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupProfile();
   setupSettings();
   setupTheme();
+  setupAvatar();
   setupTasks();
   setupCalendar();
   setupTimer();

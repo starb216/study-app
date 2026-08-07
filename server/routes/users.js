@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get('/me', auth, async (req, res) => {
   try {
-    const user = await get('SELECT id, username, email, currency, is_admin, created_at FROM users WHERE id = ?', [
+    const user = await get('SELECT id, username, email, currency, is_admin, avatar, created_at FROM users WHERE id = ?', [
       req.userId
     ]);
     if (!user) return res.status(404).json({ error: 'User not found' });
@@ -33,12 +33,33 @@ router.put('/me', auth, async (req, res) => {
     if (existing) return res.status(409).json({ error: 'Email already in use' });
 
     await run('UPDATE users SET email = ? WHERE id = ?', [email, req.userId]);
-    const updated = await get('SELECT id, username, email, currency, is_admin, created_at FROM users WHERE id = ?', [
+    const updated = await get('SELECT id, username, email, currency, is_admin, avatar, created_at FROM users WHERE id = ?', [
       req.userId
     ]);
     res.json(updated);
   } catch (err) {
     console.error('Update email error:', err.message);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.put('/avatar', auth, async (req, res) => {
+  try {
+    const { avatar } = req.body;
+    if (avatar === undefined) {
+      return res.status(400).json({ error: 'Avatar is required' });
+    }
+    if (avatar && avatar.length > 500000) {
+      return res.status(400).json({ error: 'Avatar image is too large' });
+    }
+
+    await run('UPDATE users SET avatar = ? WHERE id = ?', [avatar || null, req.userId]);
+    const updated = await get('SELECT id, username, email, currency, is_admin, avatar, created_at FROM users WHERE id = ?', [
+      req.userId
+    ]);
+    res.json(updated);
+  } catch (err) {
+    console.error('Update avatar error:', err.message);
     res.status(500).json({ error: 'Server error' });
   }
 });

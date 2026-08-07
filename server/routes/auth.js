@@ -6,6 +6,12 @@ const { run, get } = require('../db');
 const router = express.Router();
 const JWT_SECRET = 'study-app-secret';
 
+const DEFAULT_AVATARS = ['🐱', '🐶', '🐿️', '🐰', '🐯', '🐻', '🦊', '🐼', '🦁', '🐸', '🐙', '🦋'];
+
+function randomDefaultAvatar() {
+  return DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+}
+
 router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -22,9 +28,10 @@ router.post('/register', async (req, res) => {
     const isAdmin = anyUser ? 0 : 1;
 
     const passwordHash = await bcrypt.hash(password, 10);
+    const avatar = randomDefaultAvatar();
     const result = await run(
-      'INSERT INTO users (username, email, password_hash, is_admin) VALUES (?, ?, ?, ?)',
-      [username, email, passwordHash, isAdmin]
+      'INSERT INTO users (username, email, password_hash, is_admin, avatar) VALUES (?, ?, ?, ?, ?)',
+      [username, email, passwordHash, isAdmin, avatar]
     );
 
     const userId = result.lastID;
@@ -36,7 +43,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign({ userId, isAdmin }, JWT_SECRET, { expiresIn: '7d' });
     res.status(201).json({
       token,
-      user: { id: userId, username, email, currency: 0, is_admin: isAdmin }
+      user: { id: userId, username, email, currency: 0, is_admin: isAdmin, avatar }
     });
   } catch (err) {
     console.error('Register error:', err.message);
@@ -71,7 +78,8 @@ router.post('/login', async (req, res) => {
         username: user.username,
         email: user.email,
         currency: user.currency,
-        is_admin: isAdmin
+        is_admin: isAdmin,
+        avatar: user.avatar || null
       }
     });
   } catch (err) {

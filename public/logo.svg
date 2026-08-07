@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="mintGrad" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%" stop-color="#7EE9B9"/>
+      <stop offset="100%" stop-color="#3CB583"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A8F5D5"/>
+      <stop offset="100%" stop-color="#4ECA99"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="46" fill="url(#mintGrad)" opacity="0.18"/>
+  <circle cx="50" cy="50" r="38" fill="url(#mintGrad)" opacity="0.22"/>
+  <path d="M50 78V32" stroke="#2A9D6A" stroke-width="5" stroke-linecap="round"/>
+  <path d="M50 32C50 32 28 36 28 56C28 68 38 74 50 74C62 74 72 68 72 56C72 36 50 32 50 32Z" fill="url(#leafGrad)"/>
+  <path d="M50 42C44 44 38 50 38 58" stroke="#E6FFF4" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  <path d="M50 52C56 54 62 58 62 64" stroke="#E6FFF4" stroke-width="3" stroke-linecap="round" opacity="0.7"/>
+  <path d="M36 28C36 28 44 30 50 30C56 30 64 28 64 28" stroke="#2A9D6A" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="50" cy="24" r="5" fill="#2A9D6A"/>
+</svg>

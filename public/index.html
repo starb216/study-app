@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Study App</title>
+  <title>Studymint — Study Planner & Task Tracker</title>
+  <meta name="description" content="Studymint is a free study planner with tasks, calendar, timer, sleep planner, friends, and leaderboards." />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <header class="app-header">
     <div class="brand">
-      <span class="logo">📚</span>
-      <h1>Study App</h1>
+      <img src="/logo.png" alt="Studymint" class="logo-img" width="36" height="36" />
+      <h1>Studymint</h1>
     </div>
     <nav id="mainNav" class="nav hidden">
       <a href="#dashboard" data-view="dashboard">Dashboard</a>
@@ -554,6 +557,35 @@
           <p style="margin-top: 1rem; font-size: 0.9rem;">
             <a href="/design-system.html" target="_blank">Open design system preview →</a>
           </p>
+        </div>
+
+        <div class="card">
+          <h3>Avatar</h3>
+          <div class="avatar-section">
+            <div class="avatar-preview" id="avatarPreview">👤</div>
+            <div class="avatar-options">
+              <div class="avatar-grid" id="avatarGrid">
+                <button type="button" data-avatar="🐱" title="Cat">🐱</button>
+                <button type="button" data-avatar="🐶" title="Dog">🐶</button>
+                <button type="button" data-avatar="🐿️" title="Squirrel">🐿️</button>
+                <button type="button" data-avatar="🐰" title="Rabbit">🐰</button>
+                <button type="button" data-avatar="🐯" title="Tiger">🐯</button>
+                <button type="button" data-avatar="🐻" title="Bear">🐻</button>
+                <button type="button" data-avatar="🦊" title="Fox">🦊</button>
+                <button type="button" data-avatar="🐼" title="Panda">🐼</button>
+                <button type="button" data-avatar="🦁" title="Lion">🦁</button>
+                <button type="button" data-avatar="🐸" title="Frog">🐸</button>
+                <button type="button" data-avatar="🐙" title="Octopus">🐙</button>
+                <button type="button" data-avatar="🦋" title="Butterfly">🦋</button>
+              </div>
+              <div class="avatar-upload" id="avatarUploadZone">
+                <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp" hidden />
+                <p>Drag & drop a photo here, or <button type="button" class="btn-link" id="avatarUploadBtn">choose a file</button></p>
+                <small>JPG, PNG, WebP · max 1 MB</small>
+              </div>
+              <button type="button" class="btn-secondary" id="avatarRemoveBtn">Remove avatar</button>
+            </div>
+          </div>
         </div>
 
         <div class="card">

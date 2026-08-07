@@ -8,7 +8,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const friends = await all(
       `
-      SELECT u.id, u.username, u.currency
+      SELECT u.id, u.username, u.avatar, u.currency
       FROM friends f
       JOIN users u ON (u.id = CASE WHEN f.requester_id = ? THEN f.addressee_id ELSE f.requester_id END)
       WHERE (f.requester_id = ? OR f.addressee_id = ?) AND f.status = 'accepted'
@@ -27,7 +27,7 @@ router.get('/pending', auth, async (req, res) => {
   try {
     const pending = await all(
       `
-      SELECT f.id, f.requester_id, u.username
+      SELECT f.id, f.requester_id, u.username, u.avatar
       FROM friends f
       JOIN users u ON u.id = f.requester_id
       WHERE f.addressee_id = ? AND f.status = 'pending'

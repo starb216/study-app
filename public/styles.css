@@ -1,8 +1,8 @@
 /* ============================================================
-   STUDY APP DESIGN SYSTEM
+   STUDYMINT DESIGN SYSTEM
    ============================================================
-   This file defines all visual tokens and components for the
-   study app. Colors are controlled via CSS custom properties
+   This file defines all visual tokens and components for
+   Studymint. Colors are controlled via CSS custom properties
    and overridden per theme using [data-theme].
    ============================================================ */
 
@@ -253,6 +253,13 @@ body {
 
 .logo {
   font-size: 1.5rem;
+}
+
+.logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .brand h1 {
@@ -1027,7 +1034,15 @@ button {
 }
 
 .profile-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.1rem;
+  background: var(--secondary);
+  overflow: hidden;
 }
 
 .profile-menu {
@@ -1071,6 +1086,115 @@ button {
 /* ---------- 13. Settings ---------- */
 .settings-grid .card h3 {
   margin-top: 0;
+}
+
+.avatar-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.avatar-preview {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  background: var(--secondary);
+  border: 3px solid var(--primary);
+  overflow: hidden;
+}
+
+.avatar-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+
+.avatar-grid button {
+  aspect-ratio: 1;
+  font-size: 1.6rem;
+  border: 2px solid var(--secondary);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.avatar-grid button:hover {
+  transform: scale(1.08);
+  border-color: var(--primary);
+  background: var(--bg);
+}
+
+.avatar-grid button.selected {
+  border-color: var(--primary);
+  background: var(--color-primary-subtle);
+}
+
+.avatar-upload {
+  border: 2px dashed var(--secondary);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+  color: var(--muted);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.avatar-upload.drag-over {
+  border-color: var(--primary);
+  background: var(--color-primary-subtle);
+}
+
+.avatar-upload p {
+  margin: 0 0 0.25rem;
+}
+
+.avatar-upload small {
+  font-size: 0.75rem;
+}
+
+#avatarRemoveBtn {
+  align-self: center;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.friend-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: var(--secondary);
+  flex-shrink: 0;
+}
+
+.friend-avatar.has-image {
+  background-size: cover;
+  background-position: center;
 }
 
 .streak-card {
@@ -2146,7 +2270,9 @@ button {
   justify-content: center;
   font-weight: 700;
   color: #fff;
-  font-size: 1.25rem;
+  font-size: 1.6rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--lb-blue), var(--lb-green));
   background: linear-gradient(135deg, var(--lb-blue), var(--lb-green));
   box-shadow: 0 0 0 3px var(--card), 0 0 0 5px rgba(91, 138, 114, 0.35);
   transition: transform 0.4s var(--lb-ease);
@@ -2381,11 +2507,12 @@ button {
 .lb-avatar.lb-small {
   width: 34px;
   height: 34px;
-  font-size: 0.78rem;
+  font-size: 1rem;
   margin: 0;
   flex-shrink: 0;
   box-shadow: 0 0 0 2px var(--card), 0 0 0 3.5px rgba(91, 138, 114, 0.25);
   transition: transform 0.3s var(--lb-ease);
+  overflow: hidden;
 }
 
 .lb-row:hover .lb-avatar.lb-small {
