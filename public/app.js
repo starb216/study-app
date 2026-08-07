@@ -1857,7 +1857,7 @@ function setupSleep() {
     try {
       sleepSchedule = await api('/sleep', {
         method: 'PUT',
-        body: { bedtime, wake_time, enabled }
+        body: JSON.stringify({ bedtime, wake_time, enabled })
       });
       sleepAlarmTriggeredToday = null;
       sleepSnoozeUntil = null;

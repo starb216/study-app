@@ -164,7 +164,7 @@ router.delete('/sessions/:id', async (req, res) => {
     if (!session) return res.status(404).json({ error: 'Session not found' });
 
     await run('DELETE FROM study_sessions WHERE id = ?', [req.params.id]);
-    await run('UPDATE users SET currency = MAX(0, currency - ?) WHERE id = ?', [
+    await run('UPDATE users SET currency = GREATEST(0, currency - ?) WHERE id = ?', [
       session.currency_earned,
       session.user_id
     ]);
