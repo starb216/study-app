@@ -23,6 +23,7 @@
       <a href="#sleep" data-view="sleep">Sleep</a>
       <a href="#friends" data-view="friends">Friends</a>
       <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
+      <a href="#chat" data-view="chat">Chat</a>
       <a href="#admin" data-view="admin" id="adminNavLink" class="hidden">Admin</a>
       <div class="profile-dropdown" id="profileDropdown">
         <button class="profile-btn" id="profileBtn">
@@ -461,6 +462,173 @@
       </div>
     </section>
 
+    <!-- Chat -->
+    <section id="chatView" class="view hidden">
+      <div class="chat-layout">
+        <aside class="sidebar">
+          <div class="sidebar-title">Categories</div>
+          <div class="category-list">
+            <div class="category active" data-category="General">
+              <span class="category-text">General</span>
+            </div>
+            <div class="category" data-category="Study tip">
+              <span class="category-text">Study tip</span>
+            </div>
+            <div class="category" data-category="Study experience">
+              <span class="category-text">Study experience</span>
+            </div>
+            <div class="category expandable" data-category="Math" id="mathCategory">
+              <span class="category-text">Math</span>
+              <span class="category-expand">{</span>
+              <div class="subcategory-menu">
+                <div class="subcategory expandable" data-category="Algebra">
+                  <span>Algebra</span>
+                  <span class="subcategory-expand">{</span>
+                  <div class="nested-menu">
+                    <div class="nested-item" data-category="Algebra 1">Algebra 1</div>
+                    <div class="nested-item" data-category="Algebra 2">Algebra 2</div>
+                  </div>
+                </div>
+                <div class="subcategory" data-category="Geometry">Geometry</div>
+                <div class="subcategory" data-category="Pre-calculus">Pre-calculus</div>
+                <div class="subcategory" data-category="Calculus">Calculus</div>
+                <div class="subcategory" data-category="Statistics">Statistics</div>
+                <div class="subcategory" data-category="Number theory">Number theory</div>
+              </div>
+            </div>
+            <div class="category expandable" data-category="Science" id="scienceCategory">
+              <span class="category-text">Science</span>
+              <span class="category-expand">{</span>
+              <div class="subcategory-menu">
+                <div class="subcategory" data-category="Biology">Biology</div>
+                <div class="subcategory" data-category="Chemistry">Chemistry</div>
+                <div class="subcategory" data-category="Physics">Physics</div>
+                <div class="subcategory" data-category="Earth science">Earth science</div>
+                <div class="subcategory" data-category="Astronomy">Astronomy</div>
+              </div>
+            </div>
+            <div class="category" data-category="Computer science">
+              <span class="category-text">Computer science</span>
+            </div>
+            <div class="category" data-category="English">
+              <span class="category-text">English</span>
+            </div>
+            <div class="category" data-category="Mandarin Chinese">
+              <span class="category-text">Mandarin Chinese</span>
+            </div>
+            <div class="category" data-category="Spanish">
+              <span class="category-text">Spanish</span>
+            </div>
+            <div class="category" data-category="French">
+              <span class="category-text">French</span>
+            </div>
+            <div class="category" data-category="Arabic">
+              <span class="category-text">Arabic</span>
+            </div>
+            <div class="category" data-category="Portuguese">
+              <span class="category-text">Portuguese</span>
+            </div>
+            <div class="category expandable" data-category="History" id="historyCategory">
+              <span class="category-text">History</span>
+              <span class="category-expand">{</span>
+              <div class="subcategory-menu">
+                <div class="subcategory" data-category="Oral History">Oral History</div>
+                <div class="subcategory" data-category="Ancient History">Ancient History</div>
+                <div class="subcategory" data-category="Modern History">Modern History</div>
+              </div>
+            </div>
+            <button class="add-subject-btn" id="addSubjectBtn" type="button">＋ Add subject</button>
+            <button class="admin-btn" id="adminBtn" type="button">Admin</button>
+          </div>
+        </aside>
+
+        <main class="main">
+          <header class="header">
+            <h1>Start conversation about study!</h1>
+            <p>Share tips, experiences, or subject-specific questions. Pick a category and start talking.</p>
+          </header>
+
+          <section class="chat-box" id="chatBox">
+            <div class="empty-state" id="emptyState">No messages yet. Be the first to share a study tip!</div>
+          </section>
+
+          <section class="input-area">
+            <div class="input-top">
+              <label for="authorInput">Your name</label>
+              <input type="text" id="authorInput" placeholder="Student" maxlength="20" />
+              <span class="selected-category-display" id="selectedDisplay">General</span>
+            </div>
+            <div class="chat-input-wrap">
+              <textarea class="chat-input" id="chatInput" placeholder="Type your message here..."></textarea>
+              <button class="send-btn" id="sendBtn">Send</button>
+            </div>
+          </section>
+        </main>
+      </div>
+
+      <div class="modal-overlay" id="subjectModal">
+        <div class="modal-box">
+          <h2>Request a new subject</h2>
+          <p>New subjects require admin approval before they appear in the list.</p>
+          <input type="text" id="subjectRequestInput" placeholder="e.g. History, Art, Music..." maxlength="30" />
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="cancelSubjectBtn" type="button">Cancel</button>
+            <button class="modal-btn primary" id="submitSubjectBtn" type="button">Request</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="adminModal">
+        <div class="modal-box admin-box">
+          <h2>Admin review</h2>
+
+          <h3>Pending additions</h3>
+          <ul class="pending-list" id="chatPendingList"></ul>
+
+          <h3>Pending deletions</h3>
+          <ul class="pending-list" id="pendingDeletionList"></ul>
+
+          <h3>Reports</h3>
+          <ul class="pending-list" id="reportList"></ul>
+
+          <h3>Prohibited users</h3>
+          <div class="admin-add-user">
+            <input type="text" id="prohibitUserInput" placeholder="Type a username to prohibit" />
+            <button class="modal-btn primary" id="prohibitUserBtn" type="button">Prohibit</button>
+          </div>
+          <ul class="pending-list" id="prohibitedList"></ul>
+
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="closeAdminBtn" type="button">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="reportModal">
+        <div class="modal-box">
+          <h2>Report subject</h2>
+          <p id="reportSubjectName"></p>
+          <textarea id="reportReasonInput" placeholder="Why are you reporting this subject?" rows="4"></textarea>
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="cancelReportBtn" type="button">Cancel</button>
+            <button class="modal-btn primary" id="submitReportBtn" type="button">Send report</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="reportUserModal">
+        <div class="modal-box">
+          <h2>Report user</h2>
+          <p id="reportUserName"></p>
+          <textarea id="reportUserReasonInput" placeholder="Why are you reporting this user?" rows="4"></textarea>
+          <div class="modal-actions">
+            <button class="modal-btn secondary" id="cancelReportUserBtn" type="button">Cancel</button>
+            <button class="modal-btn primary" id="submitReportUserBtn" type="button">Send report</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Admin -->
     <section id="adminView" class="view hidden">
       <h2>Admin Panel</h2>
@@ -607,5 +775,6 @@
   </div>
 
   <script src="/app.js"></script>
+  <script src="/chat.js"></script>
 </body>
 </html>
