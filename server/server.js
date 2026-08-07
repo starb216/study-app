@@ -35,7 +35,7 @@ async function init() {
     await db.init();
     if (require.main === module) {
       app.listen(PORT, () => {
-        console.log(`Studymint server running on http://localhost:${PORT}`);
+        console.log(`StudyMint server running on http://localhost:${PORT}`);
       });
     }
   } catch (err) {

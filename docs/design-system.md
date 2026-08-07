@@ -1,4 +1,4 @@
-# Studymint Design System
+# StudyMint Design System
 
 A calm, focused visual system for a productivity app. It uses CSS custom properties for theming and a small set of reusable components.
 

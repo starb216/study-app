@@ -20,7 +20,7 @@ let alarmOsc = null;
 let alarmInterval = null;
 let alarmCheckInterval = null;
 let hideCompletedItems = localStorage.getItem('cal_hide_completed') === 'true';
-let currentTheme = localStorage.getItem('study_app_theme') || '';
+let currentTheme = localStorage.getItem('studymint_theme') || '';
 const triggeredAlarms = new Set();
 
 const KEY_OCCASIONS = 'cal_occasions';
@@ -572,7 +572,7 @@ function applyTheme(theme) {
   } else {
     delete document.documentElement.dataset.theme;
   }
-  localStorage.setItem('study_app_theme', theme);
+  localStorage.setItem('studymint_theme', theme);
 }
 
 function setupTheme() {

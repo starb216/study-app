@@ -3,17 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Studymint — Study Planner & Task Tracker</title>
-  <meta name="description" content="Studymint is a free study planner with tasks, calendar, timer, sleep planner, friends, and leaderboards." />
+  <title>StudyMint — Study Planner & Task Tracker</title>
+  <meta name="description" content="StudyMint is a free study planner with tasks, calendar, timer, sleep planner, friends, and leaderboards." />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/timer-themes.css" />
 </head>
 <body>
   <header class="app-header">
     <div class="brand">
-      <img src="/logo.png" alt="Studymint" class="logo-img" width="36" height="36" />
-      <h1>Studymint</h1>
+      <img src="/logo.png" alt="StudyMint" class="logo-img" width="36" height="36" />
+      <h1>StudyMint</h1>
     </div>
     <nav id="mainNav" class="nav hidden">
       <a href="#dashboard" data-view="dashboard">Dashboard</a>
@@ -292,18 +293,41 @@
 
     <!-- Timer -->
     <section id="timerView" class="view hidden">
-      <h2>Study Timer</h2>
-      <div class="timer-card">
-        <div id="timerDisplay" class="timer-display">00:00</div>
-        <label>Minutes
-          <input type="number" id="timerInput" min="1" max="180" value="25" />
-        </label>
-        <div class="timer-controls">
-          <button id="timerStart" class="btn-primary">Start</button>
-          <button id="timerPause" class="btn-secondary" disabled>Pause</button>
-          <button id="timerReset" class="btn-danger">Reset</button>
+      <div class="timer-page" id="timerPage">
+        <div class="decor" id="timerDecor"></div>
+        <div class="timer-card-enhanced">
+          <h2>Study Timer</h2>
+          <p class="timer-subtitle">Pick a scene and focus for a session.</p>
+
+          <div class="timer-theme-selector" id="timerThemeSelector">
+            <button data-theme="forest" class="active">Forest</button>
+            <button data-theme="beach">Beach</button>
+            <button data-theme="jungle">Jungle</button>
+            <button data-theme="bamboo">Bamboo</button>
+            <button data-theme="mountain">Mountain</button>
+          </div>
+
+          <div class="timer-display-ring">
+            <svg width="240" height="240" viewBox="0 0 240 240">
+              <circle class="track" cx="120" cy="120" r="110"></circle>
+              <circle class="progress" id="timerProgress" cx="120" cy="120" r="110"></circle>
+            </svg>
+            <div id="timerDisplay" class="timer-display-text">25:00</div>
+          </div>
+
+          <div class="timer-input-row">
+            <label for="timerInput">Minutes</label>
+            <input type="number" id="timerInput" min="1" max="180" value="25" />
+          </div>
+
+          <div class="timer-controls-enhanced">
+            <button id="timerStart" class="timer-btn-start">Start</button>
+            <button id="timerPause" class="timer-btn-pause" disabled>Pause</button>
+            <button id="timerReset" class="timer-btn-reset">Reset</button>
+          </div>
+
+          <p id="timerResult" class="timer-result-enhanced"></p>
         </div>
-        <p id="timerResult" class="timer-result"></p>
       </div>
     </section>
 

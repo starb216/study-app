@@ -27,7 +27,7 @@ let sleepAlarmAudioCtx = null;
 let sleepAlarmOscillator = null;
 let sleepAlarmTriggeredToday = null;
 let sleepSnoozeUntil = null;
-let currentTheme = localStorage.getItem('study_app_theme') || '';
+let currentTheme = localStorage.getItem('studymint_theme') || '';
 const triggeredAlarms = new Set();
 
 const KEY_OCCASIONS = 'cal_occasions';
@@ -441,7 +441,7 @@ function applyTheme(theme) {
   } else {
     delete document.documentElement.dataset.theme;
   }
-  localStorage.setItem('study_app_theme', theme);
+  localStorage.setItem('studymint_theme', theme);
 }
 
 function setupTheme() {
@@ -1745,11 +1745,126 @@ function setupTimer() {
   const pauseBtn = document.getElementById('timerPause');
   const resetBtn = document.getElementById('timerReset');
   const result = document.getElementById('timerResult');
+  const progress = document.getElementById('timerProgress');
+  const timerPage = document.getElementById('timerPage');
+  const timerDecor = document.getElementById('timerDecor');
+  const themeSelector = document.getElementById('timerThemeSelector');
+
+  const CIRCUMFERENCE = 2 * Math.PI * 110; // ~691
+  let timerTotal = 0;
+  let currentTimerTheme = localStorage.getItem('timerTheme') || 'forest';
+
+  function setTimerTheme(theme) {
+    currentTimerTheme = theme;
+    document.body.classList.remove('timer-forest', 'timer-beach', 'timer-jungle', 'timer-bamboo', 'timer-mountain');
+    document.body.classList.add(`timer-${theme}`);
+    localStorage.setItem('timerTheme', theme);
+
+    themeSelector.querySelectorAll('button').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === theme);
+    });
+
+    renderDecorations(theme);
+  }
+
+  function renderDecorations(theme) {
+    timerDecor.innerHTML = '';
+    const add = (cls, styles = {}) => {
+      const el = document.createElement('div');
+      el.className = cls;
+      Object.assign(el.style, styles);
+      timerDecor.appendChild(el);
+    };
+
+    if (theme === 'forest') {
+      add('decor-sun');
+      add('decor-cloud', { top: '12%', left: '8%' });
+      add('decor-cloud', { top: '18%', right: '25%' });
+      add('decor-ground-back');
+      add('decor-path');
+      add('decor-ground-front');
+      add('decor-tree');
+      add('decor-tree-back');
+      for (let i = 0; i < 8; i++) {
+        add('decor-grass', { left: `${8 + i * 11}%` });
+      }
+      add('decor-falling-leaf', { left: '20%' });
+      add('decor-falling-leaf', { left: '70%', animationDelay: '-2s' });
+      add('decor-bird', { top: '25%', left: '-5%' });
+      add('decor-bird', { top: '30%', left: '-10%', animationDelay: '-5s' });
+      add('decor-flower', { left: '18%' });
+      add('decor-flower', { right: '22%' });
+    } else if (theme === 'beach') {
+      add('decor-sun');
+      add('decor-cloud', { top: '10%', left: '6%' });
+      add('decor-cloud', { top: '20%', right: '15%' });
+      add('decor-wave-four');
+      add('decor-wave');
+      const wave2 = document.createElement('div'); wave2.className = 'decor-wave two'; timerDecor.appendChild(wave2);
+      const wave3 = document.createElement('div'); wave3.className = 'decor-wave three'; timerDecor.appendChild(wave3);
+      add('decor-sand');
+      add('decor-palm');
+      add('decor-seagull', { top: '16%', left: '-8%' });
+      add('decor-seagull', { top: '22%', left: '-12%', animationDelay: '-6s' });
+      add('decor-shell', { left: '14%' });
+      add('decor-starfish', { right: '18%' });
+    } else if (theme === 'jungle') {
+      add('decor-mist');
+      add('decor-vine', { left: '8%' });
+      add('decor-vine', { right: '12%' });
+      for (let i = 0; i < 5; i++) {
+        add('decor-vine-leaf', { top: `${15 + i * 12}%`, left: '7%' });
+        add('decor-vine-leaf', { top: `${12 + i * 12}%`, right: '11%' });
+      }
+      for (let i = 0; i < 6; i++) {
+        add('decor-leaf', { top: `${20 + i * 12}%`, left: `${10 + i * 13}%`, transform: `rotate(${i * 25}deg)` });
+      }
+      add('decor-flower-exotic', { top: '18%', left: '20%' });
+      add('decor-flower-exotic', { top: '28%', right: '18%' });
+    } else if (theme === 'bamboo') {
+      add('decor-mist');
+      add('decor-ground');
+      add('decor-bamboo', { left: '10%' });
+      add('decor-bamboo', { left: '18%', height: '130px' });
+      add('decor-bamboo', { right: '14%' });
+      add('decor-bamboo', { right: '22%', height: '140px' });
+      for (let i = 0; i < 8; i++) {
+        add('decor-bamboo-leaf', { top: `${25 + (i % 3) * 18}%`, left: `${9 + (i % 2) * 9}%` });
+        add('decor-bamboo-leaf', { top: `${22 + (i % 3) * 18}%`, right: `${13 + (i % 2) * 9}%` });
+      }
+    } else if (theme === 'mountain') {
+      add('decor-sun');
+      add('decor-cloud', { top: '10%', left: '10%' });
+      add('decor-cloud', { top: '16%', right: '20%' });
+      const mBack = document.createElement('div'); mBack.className = 'decor-mountain back'; timerDecor.appendChild(mBack);
+      const mMid = document.createElement('div'); mMid.className = 'decor-mountain mid'; timerDecor.appendChild(mMid);
+      const mFront = document.createElement('div'); mFront.className = 'decor-mountain front'; timerDecor.appendChild(mFront);
+      add('decor-pine', { left: '12%' });
+      add('decor-pine', { left: '22%' });
+      add('decor-pine', { right: '16%' });
+      for (let i = 0; i < 12; i++) {
+        add('decor-falling-snow', { left: `${5 + i * 8}%`, animationDelay: `${-i * 0.8}s` });
+      }
+    }
+  }
+
+  themeSelector.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => setTimerTheme(btn.dataset.theme));
+  });
+
+  setTimerTheme(currentTimerTheme);
 
   function updateDisplay() {
     const m = Math.floor(timerRemaining / 60);
     const s = timerRemaining % 60;
     display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+    if (timerTotal > 0 && progress) {
+      const offset = CIRCUMFERENCE - (timerRemaining / timerTotal) * CIRCUMFERENCE;
+      progress.style.strokeDashoffset = offset;
+    } else if (progress) {
+      progress.style.strokeDashoffset = 0;
+    }
   }
 
   async function refundSession() {
@@ -1820,7 +1935,8 @@ function setupTimer() {
       try { await timerPendingAward; } catch {}
     }
     if (timerRemaining <= 0) {
-      timerRemaining = (parseInt(input.value, 10) || 1) * 60;
+      timerTotal = (parseInt(input.value, 10) || 1) * 60;
+      timerRemaining = timerTotal;
       timerSecondsWorked = 0;
       timerSessionId = null;
     }
@@ -1872,6 +1988,7 @@ function setupTimer() {
     timerInterval = null;
     timerRunning = false;
     timerRemaining = 0;
+    timerTotal = 0;
     timerSecondsWorked = 0;
     input.disabled = false;
     startBtn.textContent = 'Start';
@@ -1886,6 +2003,11 @@ function setupTimer() {
     result.textContent = '';
     updateDisplay();
   });
+
+  // Initial display
+  timerTotal = (parseInt(input.value, 10) || 1) * 60;
+  timerRemaining = timerTotal;
+  updateDisplay();
 }
 
 function formatIcsDate(date) {
@@ -1895,7 +2017,7 @@ function formatIcsDate(date) {
 function buildSleepIcs(bedtime, wakeTime) {
   const now = new Date();
   const today = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const uidBase = Math.random().toString(36).slice(2) + '@study-app';
+  const uidBase = Math.random().toString(36).slice(2) + '@studymint';
 
   const [bedHour, bedMin] = bedtime.split(':').map(Number);
   const [wakeHour, wakeMin] = wakeTime.split(':').map(Number);

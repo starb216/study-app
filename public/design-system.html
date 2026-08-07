@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMint — Design System</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .ds-page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+    .ds-page h1 {
+      margin-bottom: 0.5rem;
+    }
+    .ds-page > p {
+      color: var(--muted);
+      margin-top: 0;
+      margin-bottom: 2rem;
+    }
+    .ds-section {
+      margin-bottom: 3rem;
+    }
+    .ds-section h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--secondary);
+    }
+    .ds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+    .ds-swatch {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .ds-swatch-color {
+      height: 80px;
+      border-bottom: 1px solid var(--secondary);
+    }
+    .ds-swatch-info {
+      padding: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .ds-swatch-name {
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    .ds-swatch-value {
+      color: var(--muted);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.75rem;
+    }
+    .ds-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .ds-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    .ds-sample {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem;
+      flex: 1 1 320px;
+    }
+    .ds-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .ds-calendar-chips {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      width: 160px;
+    }
+    .ds-chip {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ds-chip.event {
+      background: var(--cal-event-bg);
+      color: var(--cal-event-text);
+      border-left: 3px solid var(--cal-event-border);
+    }
+    .ds-chip.task {
+      background: var(--cal-task-bg);
+      color: var(--cal-task-text);
+      border-left: 3px solid var(--cal-task-border);
+    }
+    .theme-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .theme-bar label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 600;
+    }
+    .theme-bar select {
+      min-width: 160px;
+    }
+  </style>
+</head>
+<body>
+  <main class="ds-page">
+    <h1>StudyMint Design System</h1>
+    <p>Live reference for tokens, components, and themes.</p>
+
+    <div class="theme-bar">
+      <label>
+        Theme
+        <select id="themeSelect">
+          <option value="">Sage (default)</option>
+          <option value="pink">Pink</option>
+          <option value="blue">Blue</option>
+          <option value="yellow">Yellow</option>
+          <option value="grey">Grey</option>
+          <option value="dark">Dark</option>
+        </select>
+      </label>
+    </div>
+
+    <section class="ds-section">
+      <h2>Colors</h2>
+      <div class="ds-grid" id="colorGrid"></div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Typography</h2>
+      <div class="ds-sample">
+        <h1>Heading 1</h1>
+        <h2>Heading 2</h2>
+        <h3>Heading 3</h3>
+        <p>Body text uses the system sans-serif stack with a comfortable line height.</p>
+        <p style="color: var(--muted);">Muted text for secondary information.</p>
+        <p style="font-variant-numeric: tabular-nums;">Tabular nums: 12:34:56</p>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Buttons</h2>
+      <div class="ds-row">
+        <div class="ds-sample ds-stack">
+          <button class="btn-primary">Primary</button>
+          <button class="btn-secondary">Secondary</button>
+          <button class="btn-danger">Danger</button>
+          <button class="btn-icon">✕</button>
+          <button class="btn-link">Link button</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Forms</h2>
+      <div class="ds-sample">
+        <label>
+          Text input
+          <input type="text" placeholder="Placeholder" />
+        </label>
+        <label>
+          Select
+          <select>
+            <option>Option 1</option>
+            <option>Option 2</option>
+          </select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" checked />
+          Checkbox label
+        </label>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Cards</h2>
+      <div class="ds-row">
+        <div class="card">
+          <h3>Card title</h3>
+          <p class="big">42</p>
+          <p>A standard card with shadow and radius.</p>
+        </div>
+        <div class="card">
+          <h3>Another card</h3>
+          <p>Cards adapt to the active theme automatically.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Lists</h2>
+      <ul class="list">
+        <li>
+          <div class="task-main"><strong>Pending task</strong><small>Due tomorrow</small></div>
+          <div class="actions"><button class="btn-icon">✓</button></div>
+        </li>
+        <li class="completed">
+          <div class="task-main"><strong>Completed task</strong><small>Done</small></div>
+          <div class="actions"><button class="btn-icon">✓</button></div>
+        </li>
+      </ul>
+    </section>
+
+    <section class="ds-section">
+      <h2>Tables</h2>
+      <table class="table">
+        <thead>
+          <tr><th>User</th><th>Sessions</th><th>Points</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Alice</td><td>12</td><td>340</td></tr>
+          <tr><td>Bob</td><td>8</td><td>215</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="ds-section">
+      <h2>Tabs</h2>
+      <div class="tasks-tabs">
+        <button class="tab-btn active">Tab 1</button>
+        <button class="tab-btn">Tab 2</button>
+        <button class="tab-btn">Tab 3</button>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Calendar Chips</h2>
+      <div class="ds-row">
+        <div class="ds-calendar-chips">
+          <div class="ds-chip event">Team meeting</div>
+          <div class="ds-chip task">Math homework</div>
+          <div class="ds-chip task completed">Completed task</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ds-section">
+      <h2>Messages</h2>
+      <div class="message success">Success message</div>
+      <div class="message error">Error message</div>
+    </section>
+  </main>
+
+  <script>
+    const themeSelect = document.getElementById('themeSelect');
+    const root = document.documentElement;
+
+    function applyTheme(theme) {
+      if (theme) {
+        root.setAttribute('data-theme', theme);
+      } else {
+        root.removeAttribute('data-theme');
+      }
+      localStorage.setItem('studymint_theme', theme);
+    }
+
+    const saved = localStorage.getItem('studymint_theme') || '';
+    themeSelect.value = saved;
+    applyTheme(saved);
+
+    themeSelect.addEventListener('change', (e) => applyTheme(e.target.value));
+
+    // Render color swatches from computed styles
+    const tokens = [
+      { name: 'Background', var: '--bg' },
+      { name: 'Surface', var: '--card' },
+      { name: 'Text', var: '--text' },
+      { name: 'Muted', var: '--muted' },
+      { name: 'Primary', var: '--primary' },
+      { name: 'Primary Hover', var: '--primary-hover' },
+      { name: 'Secondary', var: '--secondary' },
+      { name: 'Danger', var: '--danger' },
+      { name: 'Success', var: '--success' },
+      { name: 'Accent', var: '--color-accent' },
+    ];
+
+    const grid = document.getElementById('colorGrid');
+    function renderSwatches() {
+      grid.innerHTML = '';
+      const style = getComputedStyle(document.body);
+      tokens.forEach((t) => {
+        const value = style.getPropertyValue(t.var).trim();
+        const swatch = document.createElement('div');
+        swatch.className = 'ds-swatch';
+        swatch.innerHTML = `
+          <div class="ds-swatch-color" style="background: ${value}"></div>
+          <div class="ds-swatch-info">
+            <div class="ds-swatch-name">${t.name}</div>
+            <div class="ds-swatch-value">${t.var}<br/>${value}</div>
+          </div>
+        `;
+        grid.appendChild(swatch);
+      });
+    }
+
+    renderSwatches();
+    themeSelect.addEventListener('change', () => setTimeout(renderSwatches, 50));
+  </script>
+</body>
+</html>

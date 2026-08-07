@@ -1,0 +1,1229 @@
+/* =========================================================
+   Coastal Countdown — Animation Enhancements
+   Scoped to each nature theme. Add via <link> after the
+   main stylesheet or append to the existing <style> block.
+   ========================================================= */
+
+/* ---------------------------------------------------------
+   Shared enhanced keyframes
+   --------------------------------------------------------- */
+@keyframes mist-drift {
+  0%, 100% { transform: translateX(-4%) translateY(0); opacity: 0.35; }
+  50% { transform: translateX(4%) translateY(-12px); opacity: 0.6; }
+}
+
+@keyframes mist-rise {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+  50% { transform: translateY(-18px) scale(1.03); opacity: 0.55; }
+}
+
+@keyframes sunflare-shift {
+  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.9; }
+  50% { transform: scale(1.18) translate(6px, -6px); opacity: 1; }
+}
+
+@keyframes sunbeam-pulse {
+  0%, 100% { opacity: 0.12; }
+  50% { opacity: 0.22; }
+}
+
+@keyframes leaf-fall-enhanced {
+  0% { transform: translateY(-12vh) translateX(0) rotate(0deg); opacity: 0; }
+  8% { opacity: 1; }
+  25% { transform: translateY(25vh) translateX(18px) rotate(110deg); }
+  50% { transform: translateY(50vh) translateX(-12px) rotate(220deg); }
+  75% { transform: translateY(75vh) translateX(22px) rotate(300deg); opacity: 0.75; }
+  100% { transform: translateY(115vh) translateX(0) rotate(420deg); opacity: 0; }
+}
+
+@keyframes petal-drift {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.85; }
+  40% { transform: translateY(35vh) translateX(-20px) rotate(140deg); }
+  70% { transform: translateY(70vh) translateX(15px) rotate(260deg); opacity: 0.6; }
+  100% { transform: translateY(110vh) translateX(0) rotate(400deg); opacity: 0; }
+}
+
+@keyframes snow-swirl {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  12% { opacity: 1; }
+  45% { transform: translateY(45vh) translateX(28px) rotate(180deg); }
+  100% { transform: translateY(115vh) translateX(-20px) rotate(360deg); opacity: 0; }
+}
+
+@keyframes bird-fly-enhanced {
+  0% { transform: translateX(-15vw) translateY(0); }
+  20% { transform: translateX(15vw) translateY(-18px); }
+  40% { transform: translateX(38vw) translateY(6px); }
+  60% { transform: translateX(62vw) translateY(-12px); }
+  80% { transform: translateX(86vw) translateY(4px); }
+  100% { transform: translateX(115vw) translateY(0); }
+}
+
+@keyframes seagull-dive {
+  0% { transform: translateX(-12vw) translateY(0); }
+  25% { transform: translateX(28vw) translateY(-22px); }
+  50% { transform: translateX(52vw) translateY(12px); }
+  75% { transform: translateX(78vw) translateY(-16px); }
+  100% { transform: translateX(112vw) translateY(0); }
+}
+
+@keyframes firefly-swarm {
+  0%, 100% { transform: translate(0, 0); opacity: 0.55; }
+  25% { transform: translate(12px, -10px); opacity: 0.9; }
+  50% { transform: translate(24px, 4px); opacity: 0.7; }
+  75% { transform: translate(8px, 14px); opacity: 1; }
+}
+
+@keyframes firefly-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.25); }
+}
+
+@keyframes grass-sway-enhanced {
+  0%, 100% { transform: rotate(-5deg) skewX(0deg); }
+  50% { transform: rotate(6deg) skewX(2deg); }
+}
+
+@keyframes tree-sway-enhanced {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(2.5deg); }
+}
+
+@keyframes palm-sway-enhanced {
+  0%, 100% { transform: rotate(-4deg); }
+  50% { transform: rotate(5deg); }
+}
+
+@keyframes palm-leaf-rustle {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.05) rotate(3deg); }
+}
+
+@keyframes wave-roll {
+  0%, 100% { transform: translateX(0) scaleY(1); }
+  50% { transform: translateX(55px) scaleY(1.3); }
+}
+
+@keyframes sand-shimmer {
+  0%, 100% { opacity: 0.15; transform: translateX(0); }
+  50% { opacity: 0.35; transform: translateX(30px); }
+}
+
+@keyframes vine-sway {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  50% { transform: translateX(5px) rotate(0.8deg); }
+}
+
+@keyframes flower-bloom {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.12) translateY(-4px); }
+}
+
+@keyframes bamboo-sway-enhanced {
+  0%, 100% { transform: rotate(-2deg) skewX(0deg); }
+  50% { transform: rotate(4deg) skewX(1.2deg); }
+}
+
+@keyframes bamboo-leaf-flutter {
+  0%, 100% { transform: rotate(0deg) scaleX(1); }
+  50% { transform: rotate(18deg) scaleX(0.9); }
+}
+
+@keyframes mountain-parallax-back {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(8px); }
+}
+
+@keyframes mountain-parallax-mid {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(14px); }
+}
+
+@keyframes mountain-parallax-front {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(22px); }
+}
+
+@keyframes pine-sway-snow {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2.5deg); }
+}
+
+@keyframes butterfly-enhanced {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-18px) rotate(12deg) scale(1.05); }
+  50% { transform: translateY(-6px) rotate(-6deg) scale(0.95); }
+  75% { transform: translateY(-22px) rotate(10deg) scale(1.05); }
+}
+
+@keyframes float-particle-enhanced {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+  25% { opacity: 0.9; }
+  50% { transform: translateY(-90px) translateX(35px); opacity: 0.4; }
+  75% { opacity: 0.8; }
+}
+
+/* ---------------------------------------------------------
+   Theme: Forest
+   --------------------------------------------------------- */
+body.forest .decor .decor-sun {
+  animation: sunflare-shift 5s infinite ease-in-out;
+}
+
+body.forest .decor .decor-sunbeam {
+  animation: sunbeam-pulse 6s infinite ease-in-out, ray-rotate 9s infinite ease-in-out;
+}
+
+body.forest .decor .decor-cloud {
+  animation: cloud-float 7s infinite ease-in-out, mist-drift 13s infinite ease-in-out;
+}
+
+body.forest .decor .decor-ground-back {
+  animation: mountain-parallax-back 14s infinite ease-in-out;
+}
+
+body.forest .decor .decor-ground-front {
+  animation: mountain-parallax-front 11s infinite ease-in-out;
+}
+
+body.forest .decor .decor-path {
+  animation: mountain-parallax-mid 12s infinite ease-in-out;
+}
+
+body.forest .decor .decor-tree {
+  animation: tree-sway-enhanced 4.5s infinite ease-in-out;
+}
+
+body.forest .decor .decor-tree-back {
+  animation: tree-sway-enhanced 6s infinite ease-in-out;
+  animation-delay: -2s;
+}
+
+body.forest .decor .decor-grass {
+  animation: grass-sway-enhanced 2.2s infinite ease-in-out;
+}
+
+body.forest .decor .decor-falling-leaf {
+  animation: leaf-fall-enhanced 7.5s infinite linear;
+}
+
+body.forest .decor .decor-falling-leaf::before,
+body.forest .decor .decor-falling-leaf::after {
+  content: '';
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border-radius: inherit;
+  opacity: 0.8;
+}
+
+body.forest .decor .decor-falling-leaf::before {
+  left: 28px;
+  top: 18px;
+  animation: leaf-fall-enhanced 8.5s infinite linear;
+  animation-delay: -1.2s;
+}
+
+body.forest .decor .decor-falling-leaf::after {
+  left: -22px;
+  top: 42px;
+  animation: leaf-fall-enhanced 9.5s infinite linear;
+  animation-delay: -3.5s;
+}
+
+body.forest .decor .decor-bird {
+  animation: bird-fly-enhanced 15s linear infinite;
+}
+
+body.forest .decor .decor-bird:nth-of-type(2) {
+  animation-duration: 18s;
+  animation-delay: -6s;
+}
+
+body.forest .decor .decor-bird:nth-of-type(3) {
+  animation-duration: 21s;
+  animation-delay: -12s;
+}
+
+body.forest .decor .decor-flower {
+  animation: flower-bloom 3.5s infinite ease-in-out;
+}
+
+/* Forest mist layer */
+body.forest .decor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(255, 255, 255, 0.22) 100%);
+  pointer-events: none;
+  animation: mist-rise 15s infinite ease-in-out;
+}
+
+/* Forest firefly swarm */
+body.forest .decor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 250, 150, 0.9);
+  box-shadow:
+    10vw 58vh 2px rgba(255, 250, 150, 0.75),
+    24vw 72vh 3px rgba(210, 255, 160, 0.65),
+    38vw 52vh 2px rgba(255, 255, 150, 0.8),
+    52vw 78vh 3px rgba(255, 250, 150, 0.55),
+    66vw 62vh 2px rgba(220, 255, 180, 0.75),
+    78vw 74vh 3px rgba(255, 250, 150, 0.6),
+    88vw 54vh 2px rgba(240, 255, 170, 0.7);
+  filter: blur(0.5px);
+  pointer-events: none;
+  animation: firefly-swarm 10s infinite ease-in-out;
+}
+
+body.forest .particle {
+  animation: float-particle-enhanced 5s infinite ease-in-out, firefly-pulse 3s infinite ease-in-out;
+}
+
+/* ---------------------------------------------------------
+   Theme: Beach
+   --------------------------------------------------------- */
+body.beach .decor .decor-sun {
+  animation: sunflare-shift 6s infinite ease-in-out;
+}
+
+body.beach .decor .decor-cloud {
+  animation: cloud-float 8s infinite ease-in-out, mist-drift 14s infinite ease-in-out;
+}
+
+body.beach .decor .decor-wave {
+  animation: wave-roll 5s infinite ease-in-out;
+}
+
+body.beach .decor .decor-wave.two {
+  animation: wave-roll 6.5s infinite ease-in-out reverse;
+}
+
+body.beach .decor .decor-wave.three {
+  animation: wave-roll 7.5s infinite ease-in-out;
+  animation-delay: -1s;
+}
+
+body.beach .decor .decor-wave-four {
+  animation: wave-roll 9s infinite ease-in-out reverse;
+}
+
+body.beach .decor .decor-sand {
+  overflow: hidden;
+}
+
+body.beach .decor .decor-sand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 40%, rgba(255, 255, 255, 0.35) 0%, transparent 25%);
+  animation: sand-shimmer 7s infinite ease-in-out;
+}
+
+body.beach .decor .decor-palm {
+  animation: palm-sway-enhanced 5s infinite ease-in-out;
+}
+
+body.beach .decor .decor-palm::before {
+  animation: palm-leaf-rustle 3s infinite ease-in-out;
+}
+
+body.beach .decor .decor-seagull {
+  animation: seagull-dive 14s linear infinite, seagull-bob 2s ease-in-out infinite;
+}
+
+body.beach .decor .decor-seagull:nth-of-type(2) {
+  animation-duration: 17s, 2.3s;
+  animation-delay: -6s, 0s;
+}
+
+body.beach .decor .decor-seagull:nth-of-type(3) {
+  animation-duration: 20s, 1.8s;
+  animation-delay: -11s, 0s;
+}
+
+body.beach .decor .decor-shell,
+body.beach .decor .decor-starfish {
+  animation: flower-bob 4s infinite ease-in-out;
+}
+
+/* Beach heat haze / sea mist */
+body.beach .decor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 35%, rgba(255, 255, 255, 0.18) 100%);
+  pointer-events: none;
+  animation: mist-drift 16s infinite ease-in-out;
+}
+
+/* Beach floating petals / sparkles */
+body.beach .decor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 230, 150, 0.8);
+  box-shadow:
+    15vw 35vh 2px rgba(255, 255, 255, 0.7),
+    35vw 22vh 3px rgba(255, 230, 150, 0.65),
+    55vw 30vh 2px rgba(255, 255, 255, 0.75),
+    72vw 18vh 3px rgba(255, 240, 180, 0.6),
+    85vw 28vh 2px rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+  animation: float-particle-enhanced 8s infinite ease-in-out;
+}
+
+body.beach .particle {
+  animation: float-particle-enhanced 6s infinite ease-in-out, firefly-pulse 4s infinite ease-in-out;
+}
+
+/* ---------------------------------------------------------
+   Theme: Jungle
+   --------------------------------------------------------- */
+body.jungle .decor .decor-leaf {
+  animation: leaf-sway 4s infinite ease-in-out;
+}
+
+body.jungle .decor .decor-vine {
+  animation: vine-sway 5s infinite ease-in-out;
+}
+
+body.jungle .decor .decor-vine-leaf {
+  animation: leaf-sway 3s infinite ease-in-out, bamboo-leaf-flutter 2.5s infinite ease-in-out;
+}
+
+body.jungle .decor .decor-flower-exotic {
+  animation: flower-bloom 3.5s infinite ease-in-out;
+}
+
+body.jungle .decor .decor-mist {
+  animation: mist-rise 12s infinite ease-in-out, mist-drift 16s infinite ease-in-out;
+}
+
+/* Jungle rain / droplets */
+body.jungle .decor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 80px,
+    rgba(255, 255, 255, 0.06) 80px,
+    rgba(255, 255, 255, 0.06) 82px
+  );
+  pointer-events: none;
+  animation: mist-rise 2.5s infinite linear;
+  opacity: 0.5;
+}
+
+/* Jungle firefly swarm */
+body.jungle .decor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(255, 200, 100, 0.95);
+  box-shadow:
+    8vw 45vh 2px rgba(255, 180, 90, 0.75),
+    22vw 62vh 2px rgba(255, 220, 120, 0.65),
+    36vw 38vh 3px rgba(255, 200, 100, 0.8),
+    50vw 72vh 2px rgba(255, 180, 90, 0.6),
+    64vw 52vh 3px rgba(255, 220, 120, 0.75),
+    76vw 68vh 2px rgba(255, 200, 100, 0.65),
+    90vw 48vh 3px rgba(255, 220, 120, 0.7);
+  filter: blur(0.5px);
+  pointer-events: none;
+  animation: firefly-swarm 9s infinite ease-in-out;
+}
+
+body.jungle .butterfly {
+  animation: butterfly-enhanced 4s infinite ease-in-out;
+}
+
+body.jungle .particle {
+  animation: float-particle-enhanced 5.5s infinite ease-in-out, firefly-pulse 3.5s infinite ease-in-out;
+}
+
+/* ---------------------------------------------------------
+   Theme: Bamboo
+   --------------------------------------------------------- */
+body.bamboo .decor .decor-bamboo {
+  animation: bamboo-sway-enhanced 5.5s infinite ease-in-out;
+}
+
+body.bamboo .decor .decor-bamboo:nth-of-type(1) { animation-delay: 0s; }
+body.bamboo .decor .decor-bamboo:nth-of-type(2) { animation-delay: -0.8s; }
+body.bamboo .decor .decor-bamboo:nth-of-type(3) { animation-delay: -1.6s; }
+body.bamboo .decor .decor-bamboo:nth-of-type(4) { animation-delay: -0.4s; }
+body.bamboo .decor .decor-bamboo:nth-of-type(5) { animation-delay: -1.2s; }
+body.bamboo .decor .decor-bamboo:nth-of-type(6) { animation-delay: -2s; }
+
+body.bamboo .decor .decor-bamboo-leaf {
+  animation: bamboo-leaf-flutter 2.8s infinite ease-in-out;
+}
+
+body.bamboo .decor .decor-mist {
+  animation: mist-rise 14s infinite ease-in-out, mist-drift 18s infinite ease-in-out;
+}
+
+body.bamboo .decor .decor-ground {
+  animation: mountain-parallax-front 13s infinite ease-in-out;
+}
+
+/* Bamboo sun shafts */
+body.bamboo .decor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, transparent 45%);
+  pointer-events: none;
+  animation: sunbeam-pulse 7s infinite ease-in-out;
+}
+
+/* Falling bamboo leaves */
+body.bamboo .decor::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 8px;
+  height: 3px;
+  border-radius: 0 80% 0 80%;
+  background: rgba(138, 168, 92, 0.7);
+  box-shadow:
+    12vw 15vh 0 rgba(138, 168, 92, 0.6),
+    28vw 8vh 0 rgba(168, 196, 125, 0.55),
+    45vw 22vh 0 rgba(138, 168, 92, 0.65),
+    62vw 12vh 0 rgba(168, 196, 125, 0.5),
+    78vw 28vh 0 rgba(138, 168, 92, 0.6),
+    88vw 10vh 0 rgba(168, 196, 125, 0.55);
+  pointer-events: none;
+  animation: petal-drift 10s infinite linear;
+}
+
+body.bamboo .particle {
+  animation: float-particle-enhanced 6s infinite ease-in-out, firefly-pulse 3.8s infinite ease-in-out;
+}
+
+/* ---------------------------------------------------------
+   Theme: Mountain
+   --------------------------------------------------------- */
+body.mountain .decor .decor-sun {
+  animation: sunflare-shift 7s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-sunray {
+  animation: sunbeam-pulse 7s infinite ease-in-out, ray-rotate 10s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-mountain.back {
+  animation: mountain-parallax-back 18s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-mountain.mid {
+  animation: mountain-parallax-mid 15s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-mountain.front {
+  animation: mountain-parallax-front 12s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-cloud {
+  animation: cloud-float 10s infinite ease-in-out, mist-drift 18s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-cloud.one { animation-delay: 0s, 0s; }
+body.mountain .decor .decor-cloud.two { animation-delay: -3s, -5s; }
+body.mountain .decor .decor-cloud.three { animation-delay: -6s, -9s; }
+body.mountain .decor .decor-cloud.four { animation-delay: -8s, -12s; }
+
+body.mountain .decor .decor-pine {
+  animation: pine-sway-snow 4s infinite ease-in-out;
+}
+
+body.mountain .decor .decor-falling-snow {
+  animation: snow-swirl 9s infinite linear;
+}
+
+body.mountain .decor .decor-falling-snow::before,
+body.mountain .decor .decor-falling-snow::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+}
+
+body.mountain .decor .decor-falling-snow::before {
+  left: 25px;
+  top: 15px;
+  animation: snow-swirl 10s infinite linear;
+  animation-delay: -1.5s;
+}
+
+body.mountain .decor .decor-falling-snow::after {
+  left: -18px;
+  top: 35px;
+  animation: snow-swirl 8s infinite linear;
+  animation-delay: -3s;
+}
+
+/* Mountain valley mist */
+body.mountain .decor::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 60%, rgba(255, 255, 255, 0.22) 100%);
+  pointer-events: none;
+  animation: mist-rise 16s infinite ease-in-out;
+}
+
+/* Mountain aurora shimmer */
+body.mountain .decor::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(180, 230, 240, 0.18) 0%, transparent 55%);
+  pointer-events: none;
+  animation: mist-drift 20s infinite ease-in-out;
+}
+
+body.mountain .particle {
+  animation: float-particle-enhanced 7s infinite ease-in-out, firefly-pulse 4.5s infinite ease-in-out;
+}
+
+/* =========================================================
+   Coastal Countdown — Timer layout & decorative elements
+   ========================================================= */
+
+.timer-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow: hidden;
+  transition: background 0.6s ease, color 0.3s ease;
+}
+
+.timer-page .decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.timer-card-enhanced {
+  position: relative;
+  z-index: 1;
+  width: min(520px, 92vw);
+  padding: 2.5rem 2rem;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.12);
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.timer-card-enhanced:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.15);
+}
+
+.timer-card-enhanced h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.timer-card-enhanced .timer-subtitle {
+  margin: 0 0 1.75rem;
+  opacity: 0.7;
+  font-size: 0.95rem;
+}
+
+.timer-theme-selector {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.timer-theme-selector button {
+  padding: 0.45rem 0.9rem;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timer-theme-selector button:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.timer-theme-selector button.active {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: currentColor;
+  font-weight: 600;
+}
+
+.timer-display-ring {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 0 auto 1.75rem;
+}
+
+.timer-display-ring svg {
+  transform: rotate(-90deg);
+}
+
+.timer-display-ring circle.track {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.08);
+  stroke-width: 8;
+}
+
+.timer-display-ring circle.progress {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-dasharray: 691;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.timer-display-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.timer-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.timer-input-row label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.timer-input-row input {
+  width: 80px;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  color: inherit;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.timer-controls-enhanced {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.timer-controls-enhanced button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease;
+}
+
+.timer-controls-enhanced button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.timer-controls-enhanced button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timer-btn-start {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: white;
+}
+
+.timer-btn-pause {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+}
+
+.timer-btn-reset {
+  background: linear-gradient(135deg, #f87171, #ef4444);
+  color: white;
+}
+
+.timer-result-enhanced {
+  margin-top: 1.25rem;
+  min-height: 1.5rem;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+/* ---------- Decorative shapes ---------- */
+.decor-sun,
+.decor-sunbeam,
+.decor-cloud,
+.decor-ground-back,
+.decor-ground-front,
+.decor-path,
+.decor-tree,
+.decor-tree-back,
+.decor-grass,
+.decor-falling-leaf,
+.decor-bird,
+.decor-flower,
+.decor-wave,
+.decor-sand,
+.decor-palm,
+.decor-seagull,
+.decor-shell,
+.decor-starfish,
+.decor-leaf,
+.decor-vine,
+.decor-vine-leaf,
+.decor-flower-exotic,
+.decor-mist,
+.decor-bamboo,
+.decor-bamboo-leaf,
+.decor-ground,
+.decor-mountain,
+.decor-sunray,
+.decor-pine,
+.decor-falling-snow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.decor-sun {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  top: 8%;
+  right: 12%;
+}
+
+.decor-sunbeam {
+  top: 8%;
+  right: 12%;
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+}
+
+.decor-cloud {
+  width: 90px;
+  height: 34px;
+  border-radius: 17px;
+  opacity: 0.8;
+}
+
+.decor-cloud::before,
+.decor-cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+
+.decor-cloud::before {
+  width: 42px;
+  height: 42px;
+  top: -18px;
+  left: 14px;
+}
+
+.decor-cloud::after {
+  width: 30px;
+  height: 30px;
+  top: -10px;
+  right: 16px;
+}
+
+/* ---------- Forest theme ---------- */
+body.timer-forest .timer-page {
+  background: linear-gradient(180deg, #e8f5e9 0%, #c8e6c9 60%, #a5d6a7 100%);
+  color: #1b4332;
+}
+
+body.timer-forest .decor-sun {
+  background: radial-gradient(circle, #fff9c4 0%, rgba(255, 249, 196, 0) 70%);
+  box-shadow: 0 0 40px rgba(255, 241, 118, 0.5);
+}
+
+body.timer-forest .decor-cloud {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+body.timer-forest .decor-ground-back,
+body.timer-forest .decor-ground-front,
+body.timer-forest .decor-path {
+  bottom: 0;
+  left: -10%;
+  width: 120%;
+  height: 28%;
+  background: #66bb6a;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  opacity: 0.5;
+}
+
+body.timer-forest .decor-ground-front {
+  height: 18%;
+  background: #43a047;
+  opacity: 0.75;
+}
+
+body.timer-forest .decor-path {
+  height: 12%;
+  background: #81c784;
+  opacity: 0.6;
+}
+
+body.timer-forest .decor-tree {
+  bottom: 12%;
+  left: 12%;
+  width: 0;
+  height: 0;
+  border-left: 30px solid transparent;
+  border-right: 30px solid transparent;
+  border-bottom: 90px solid #2e7d32;
+}
+
+body.timer-forest .decor-tree-back {
+  bottom: 10%;
+  right: 18%;
+  width: 0;
+  height: 0;
+  border-left: 22px solid transparent;
+  border-right: 22px solid transparent;
+  border-bottom: 70px solid #388e3c;
+  opacity: 0.7;
+}
+
+body.timer-forest .decor-grass {
+  bottom: 0;
+  width: 6px;
+  height: 40px;
+  background: #2e7d32;
+  border-radius: 3px 3px 0 0;
+}
+
+body.timer-forest .decor-falling-leaf {
+  top: -10%;
+  width: 14px;
+  height: 14px;
+  background: #66bb6a;
+  border-radius: 0 80% 0 80%;
+  opacity: 0.85;
+}
+
+body.timer-forest .decor-bird {
+  top: 22%;
+  width: 22px;
+  height: 4px;
+  border-top: 3px solid #1b4332;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+body.timer-forest .decor-flower {
+  bottom: 8%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f48fb1;
+  box-shadow: 0 0 0 5px #f8bbd0;
+}
+
+/* ---------- Beach theme ---------- */
+body.timer-beach .timer-page {
+  background: linear-gradient(180deg, #e1f5fe 0%, #b3e5fc 40%, #fff3e0 75%, #ffe0b2 100%);
+  color: #3e2723;
+}
+
+body.timer-beach .decor-sun {
+  background: radial-gradient(circle, #fff176 0%, rgba(255, 241, 118, 0) 70%);
+  box-shadow: 0 0 50px rgba(255, 213, 79, 0.5);
+}
+
+body.timer-beach .decor-cloud {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+body.timer-beach .decor-wave {
+  bottom: 0;
+  left: -10%;
+  width: 120%;
+  height: 18%;
+  background: rgba(33, 150, 243, 0.35);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+
+body.timer-beach .decor-wave.two {
+  height: 14%;
+  background: rgba(33, 150, 243, 0.25);
+}
+
+body.timer-beach .decor-wave.three {
+  height: 10%;
+  background: rgba(33, 150, 243, 0.2);
+}
+
+body.timer-beach .decor-wave-four {
+  height: 22%;
+  background: rgba(33, 150, 243, 0.4);
+}
+
+body.timer-beach .decor-sand {
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 22%;
+  background: #ffe0b2;
+  border-radius: 50% 50% 0 0 / 30% 30% 0 0;
+}
+
+body.timer-beach .decor-palm {
+  bottom: 12%;
+  right: 8%;
+  width: 8px;
+  height: 110px;
+  background: #5d4037;
+  border-radius: 4px;
+  transform-origin: bottom center;
+}
+
+body.timer-beach .decor-palm::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 50px;
+  background: radial-gradient(ellipse at center, #66bb6a 40%, transparent 70%);
+}
+
+body.timer-beach .decor-seagull {
+  top: 18%;
+  width: 20px;
+  height: 4px;
+  border-top: 2px solid #3e2723;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+body.timer-beach .decor-shell,
+body.timer-beach .decor-starfish {
+  bottom: 6%;
+  width: 18px;
+  height: 18px;
+  background: #ffab91;
+  border-radius: 50%;
+}
+
+/* ---------- Jungle theme ---------- */
+body.timer-jungle .timer-page {
+  background: linear-gradient(180deg, #1b5e20 0%, #2e7d32 50%, #004d40 100%);
+  color: #e8f5e9;
+}
+
+body.timer-jungle .timer-card-enhanced {
+  background: rgba(0, 0, 0, 0.45);
+}
+
+body.timer-jungle .decor-leaf {
+  width: 40px;
+  height: 20px;
+  background: #66bb6a;
+  border-radius: 0 80% 0 80%;
+  opacity: 0.7;
+}
+
+body.timer-jungle .decor-vine {
+  top: 0;
+  width: 4px;
+  height: 45%;
+  background: linear-gradient(180deg, #4caf50, #2e7d32);
+  border-radius: 2px;
+}
+
+body.timer-jungle .decor-vine-leaf {
+  width: 18px;
+  height: 10px;
+  background: #81c784;
+  border-radius: 0 80% 0 80%;
+}
+
+body.timer-jungle .decor-flower-exotic {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ff4081;
+  box-shadow: 0 0 0 6px #f48fb1;
+}
+
+body.timer-jungle .decor-mist {
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 40%, rgba(255,255,255,0.08) 100%);
+}
+
+/* ---------- Bamboo theme ---------- */
+body.timer-bamboo .timer-page {
+  background: linear-gradient(180deg, #f1f8e9 0%, #dcedc8 50%, #c5e1a5 100%);
+  color: #33691e;
+}
+
+body.timer-bamboo .decor-bamboo {
+  bottom: 0;
+  width: 12px;
+  height: 160px;
+  background: linear-gradient(90deg, #7cb342, #558b2f);
+  border-radius: 6px 6px 0 0;
+}
+
+body.timer-bamboo .decor-bamboo::before,
+body.timer-bamboo .decor-bamboo::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+body.timer-bamboo .decor-bamboo::before { top: 30%; }
+body.timer-bamboo .decor-bamboo::after { top: 60%; }
+
+body.timer-bamboo .decor-bamboo-leaf {
+  width: 28px;
+  height: 8px;
+  background: #7cb342;
+  border-radius: 0 80% 0 80%;
+}
+
+body.timer-bamboo .decor-ground {
+  bottom: 0;
+  left: -10%;
+  width: 120%;
+  height: 15%;
+  background: #8d6e63;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  opacity: 0.3;
+}
+
+body.timer-bamboo .decor-mist {
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 50%);
+}
+
+/* ---------- Mountain theme ---------- */
+body.timer-mountain .timer-page {
+  background: linear-gradient(180deg, #e3f2fd 0%, #bbdefb 35%, #e1f5fe 70%, #eceff1 100%);
+  color: #263238;
+}
+
+body.timer-mountain .decor-sun {
+  background: radial-gradient(circle, #fff9c4 0%, rgba(255, 249, 196, 0) 70%);
+  box-shadow: 0 0 40px rgba(255, 241, 118, 0.4);
+}
+
+body.timer-mountain .decor-mountain {
+  bottom: 0;
+  width: 0;
+  height: 0;
+  border-left: 140px solid transparent;
+  border-right: 140px solid transparent;
+  border-bottom: 180px solid #90a4ae;
+}
+
+body.timer-mountain .decor-mountain.back {
+  left: -5%;
+  border-bottom-color: #b0bec5;
+  opacity: 0.6;
+}
+
+body.timer-mountain .decor-mountain.mid {
+  left: 25%;
+  border-bottom-color: #90a4ae;
+  opacity: 0.8;
+}
+
+body.timer-mountain .decor-mountain.front {
+  right: -5%;
+  border-bottom-color: #78909c;
+}
+
+body.timer-mountain .decor-pine {
+  bottom: 8%;
+  width: 0;
+  height: 0;
+  border-left: 18px solid transparent;
+  border-right: 18px solid transparent;
+  border-bottom: 55px solid #455a64;
+}
+
+body.timer-mountain .decor-falling-snow {
+  top: -5%;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] body.timer-forest .timer-card-enhanced,
+[data-theme="dark"] body.timer-beach .timer-card-enhanced,
+[data-theme="dark"] body.timer-bamboo .timer-card-enhanced,
+[data-theme="dark"] body.timer-mountain .timer-card-enhanced {
+  background: rgba(30, 30, 30, 0.75);
+  color: #f5f5f5;
+}
+
+[data-theme="dark"] body.timer-jungle .timer-card-enhanced {
+  background: rgba(0, 0, 0, 0.55);
+}

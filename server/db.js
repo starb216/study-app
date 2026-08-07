@@ -60,7 +60,7 @@ if (usePostgres) {
 } else {
   const { DatabaseSync } = require('node:sqlite');
   const dbDir = path.resolve(__dirname, '..');
-  const dbPath = path.join(dbDir, 'study_app.db');
+  const dbPath = path.join(dbDir, 'studymint.db');
   const sqliteDb = new DatabaseSync(dbPath);
   db = sqliteDb;
 

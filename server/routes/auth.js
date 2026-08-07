@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { run, get } = require('../db');
 
 const router = express.Router();
-const JWT_SECRET = 'study-app-secret';
+const JWT_SECRET = 'studymint-secret';
 
 const DEFAULT_AVATARS = ['🐱', '🐶', '🐿️', '🐰', '🐯', '🐻', '🦊', '🐼', '🦁', '🐸', '🐙', '🦋'];
 
