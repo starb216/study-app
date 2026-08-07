@@ -65,7 +65,7 @@
   --cal-task-text: #166534;
   --cal-task-border: #22c55e;
   --cal-task-completed-opacity: 0.6;
-  --cal-shape-default: #e5e5e5;
+  --cal-shape-default: #d4e8dc;
   --cal-shape-school: #a2d9ff;
   --cal-shape-family: #ffb6c1;
   --cal-shape-work: #ffe066;
@@ -1357,7 +1357,7 @@ button {
 /* ---------- 16. Visual Calendar ---------- */
 .visual-calendar-card {
   background: var(--card);
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   border-radius: 20px;
   padding: 1.5rem;
   display: grid;
@@ -1392,7 +1392,7 @@ button {
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 600;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   background: var(--card);
   border-radius: 10px;
   cursor: pointer;
@@ -1409,7 +1409,7 @@ button {
   padding: 6px 12px;
   font-size: 11px;
   font-weight: 600;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   background: var(--card);
   border-radius: 10px;
   cursor: pointer;
@@ -1444,7 +1444,7 @@ button {
 }
 
 .calendar-day.today {
-  border-color: var(--text);
+  border-color: var(--primary);
 }
 
 .calendar-day.selected {
@@ -1532,7 +1532,7 @@ button {
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: var(--text);
+  color: var(--primary);
   margin-bottom: 4px;
 }
 
@@ -1557,7 +1557,7 @@ button {
 }
 
 .finished-tag {
-  color: var(--text);
+  color: var(--primary);
 }
 
 .incomplete-tag {
@@ -1602,7 +1602,7 @@ button {
 .visual-calendar-right textarea {
   width: 100%;
   min-height: 60px;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   border-radius: 10px;
   padding: 10px;
   font-family: inherit;
@@ -1617,7 +1617,7 @@ button {
 }
 
 .reminder-row {
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   border-radius: 14px;
   background: var(--card);
   overflow: hidden;
@@ -1667,7 +1667,7 @@ button {
   text-transform: uppercase;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   white-space: nowrap;
 }
 
@@ -1680,8 +1680,8 @@ button {
 }
 
 .reminder-badge.high {
-  background: var(--text);
-  color: var(--card);
+  background: var(--primary);
+  color: #fff;
 }
 
 .reminder-edit-header {
@@ -1699,7 +1699,7 @@ button {
 
 .reminder-row input,
 .reminder-row select {
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   border-radius: 10px;
   padding: 10px;
   font-family: inherit;
@@ -1720,7 +1720,7 @@ button {
 .reminder-row button {
   width: 34px;
   height: 34px;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   background: var(--card);
   border-radius: 10px;
   cursor: pointer;
@@ -1745,7 +1745,7 @@ button {
 .remark-area {
   display: none;
   width: 100%;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   border-radius: 18px;
   border-top-left-radius: 4px;
   padding: 14px;
@@ -1766,7 +1766,7 @@ button {
   gap: 4px;
   margin-top: 4px;
   padding: 8px 12px;
-  border: 2px solid var(--text);
+  border: 2px solid var(--secondary);
   background: var(--card);
   border-radius: 10px;
   font-size: 13px;
