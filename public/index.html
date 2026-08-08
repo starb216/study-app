@@ -22,6 +22,8 @@
       <a href="#calendar" data-view="calendar">Calendar</a>
       <a href="#timer" data-view="timer">Timer</a>
       <a href="#sleep" data-view="sleep">Sleep</a>
+      <a href="#notes" data-view="notes">Notes</a>
+      <a href="#courses" data-view="courses">Courses</a>
       <a href="#friends" data-view="friends">Friends</a>
       <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
       <a href="#chat" data-view="chat">Chat</a>
@@ -422,6 +424,116 @@
           <button type="submit" class="btn-primary">💾 Save Schedule</button>
         </div>
       </form>
+    </section>
+
+    <!-- Notes -->
+    <section id="notesView" class="view hidden">
+      <div class="notes-header">
+        <h2>📝 Notes</h2>
+        <div class="notes-actions">
+          <button id="newNoteBtn" class="btn-primary" type="button">+ New note</button>
+          <button id="exportNotesBtn" class="btn-secondary" type="button">⬇ Export all</button>
+          <button id="importNotesBtn" class="btn-secondary" type="button">⬆ Import</button>
+          <input type="file" id="importNotesFile" accept="application/json,.json" hidden />
+        </div>
+      </div>
+
+      <div class="notes-layout">
+        <aside class="notes-sidebar">
+          <div id="notesList" class="notes-list"></div>
+        </aside>
+
+        <div class="notes-main">
+          <div class="notes-editor card">
+            <input type="text" id="noteTitleInput" placeholder="Note title" maxlength="120" />
+            <textarea id="noteContentInput" placeholder="Write your note here..." rows="10"></textarea>
+            <div class="notes-editor-actions">
+              <button id="saveNoteBtn" class="btn-primary" type="button">Save</button>
+              <button id="deleteNoteBtn" class="btn-danger" type="button">Delete</button>
+            </div>
+          </div>
+
+          <div class="ai-panel card">
+            <h3>✨ AI study tools</h3>
+            <p class="ai-hint">Generate from the currently open note.</p>
+            <div class="ai-buttons">
+              <button id="aiReviewBtn" class="btn-secondary" type="button">📄 Review sheet</button>
+              <button id="aiQuizBtn" class="btn-secondary" type="button">❓ Quiz</button>
+              <button id="aiFlashcardsBtn" class="btn-secondary" type="button">🃏 Flashcards</button>
+            </div>
+            <div id="aiStatus" class="ai-status"></div>
+            <div id="aiResult" class="ai-result hidden"></div>
+            <button id="aiSaveNoteBtn" class="btn-primary hidden" type="button">Save as note</button>
+          </div>
+
+          <div class="flashcards-section card">
+            <h3>🃏 Flashcards</h3>
+            <div id="flashcardArea" class="flashcard-area">
+              <div id="flashcard" class="flashcard">
+                <div class="flashcard-face flashcard-front" id="flashcardFront">No cards yet</div>
+                <div class="flashcard-face flashcard-back" id="flashcardBack"></div>
+              </div>
+              <div class="flashcard-controls">
+                <button id="prevCardBtn" class="btn-secondary" type="button">← Prev</button>
+                <button id="flipCardBtn" class="btn-secondary" type="button">Flip</button>
+                <button id="nextCardBtn" class="btn-secondary" type="button">Next →</button>
+                <button id="shuffleCardsBtn" class="btn-secondary" type="button">Shuffle</button>
+                <button id="deleteCardBtn" class="btn-danger" type="button">Delete card</button>
+              </div>
+              <div class="flashcard-footer">
+                <span id="cardCounter">0 / 0</span>
+                <button id="clearCardsBtn" class="btn-link" type="button">Clear all</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="quizModal" class="modal-overlay hidden">
+        <div class="modal-box quiz-box">
+          <h2>Quiz</h2>
+          <div id="quizQuestions"></div>
+          <div id="quizScore" class="quiz-score"></div>
+          <div class="modal-actions">
+            <button id="quizCloseBtn" class="modal-btn secondary" type="button">Close</button>
+            <button id="quizSubmitBtn" class="modal-btn primary" type="button">Check answers</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Courses -->
+    <section id="coursesView" class="view hidden">
+      <div class="courses-header">
+        <h2>🎓 Courses</h2>
+        <form id="createCourseForm" class="inline-form">
+          <input type="text" id="courseNameInput" placeholder="New course name (e.g. Integrated Math 2)" required maxlength="60" />
+          <input type="text" id="courseDescInput" placeholder="Description (optional)" maxlength="200" />
+          <button type="submit" class="btn-primary" id="createCourseBtn">Create course</button>
+        </form>
+      </div>
+
+      <div id="coursesList" class="courses-grid"></div>
+
+      <div id="courseDetail" class="course-detail hidden">
+        <button id="courseBackBtn" class="btn-link" type="button">← All courses</button>
+        <h3 id="courseDetailName"></h3>
+        <p id="courseDetailDesc" class="course-desc"></p>
+
+        <div class="card material-upload">
+          <h4>Upload material</h4>
+          <input type="text" id="materialTitleInput" placeholder="Title (e.g. Unit 3 study guide)" maxlength="120" />
+          <textarea id="materialTextInput" placeholder="Paste text content (optional if uploading a file)" rows="4"></textarea>
+          <div class="material-file-row">
+            <input type="file" id="materialFileInput" accept=".txt,.md,.pdf,.png,.jpg,.jpeg,.webp" />
+            <small>Max 2.5 MB — txt, md, pdf, or image</small>
+          </div>
+          <button id="uploadMaterialBtn" class="btn-primary" type="button">Upload to course</button>
+        </div>
+
+        <h4>Materials</h4>
+        <div id="materialsList" class="materials-list"></div>
+      </div>
     </section>
 
     <!-- Friends -->

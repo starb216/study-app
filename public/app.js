@@ -288,7 +288,10 @@ function logout() {
 
 function showView(view) {
   currentView = view;
-  document.querySelectorAll('.view').forEach((v) => v.classList.add('hidden'));
+  document.querySelectorAll('.view').forEach((v) => {
+    v.classList.add('hidden');
+    if (v.id === 'chatView') v.classList.remove('chat-animate');
+  });
   document.querySelectorAll('.nav a').forEach((a) => a.classList.remove('active'));
 
   if (view === 'auth') {
@@ -297,7 +300,12 @@ function showView(view) {
   }
 
   const target = document.getElementById(`${view}View`);
-  if (target) target.classList.remove('hidden');
+  if (target) {
+    target.classList.remove('hidden');
+    if (target.id === 'chatView') {
+      requestAnimationFrame(() => target.classList.add('chat-animate'));
+    }
+  }
   const navLink = document.querySelector(`.nav a[data-view="${view}"]`);
   if (navLink) navLink.classList.add('active');
 
@@ -313,6 +321,12 @@ function showView(view) {
       break;
     case 'sleep':
       loadSleep();
+      break;
+    case 'notes':
+      loadNotesView();
+      break;
+    case 'courses':
+      loadCoursesView();
       break;
     case 'friends':
       loadFriends();
@@ -2998,6 +3012,561 @@ function formatDuration(totalSeconds) {
   return `${formatNumber(m)}:${formatNumber(s)}`;
 }
 
+/* ---------- Notes ---------- */
+
+let openNoteId = null;
+let currentNoteTitle = '';
+let lastReviewContent = '';
+
+async function loadNotesView() {
+  await loadNotes();
+  loadFlashcards();
+}
+
+async function loadNotes() {
+  try {
+    const notes = await api('/notes');
+    const list = document.getElementById('notesList');
+    list.innerHTML = '';
+
+    if (notes.length === 0) {
+      list.innerHTML = '<p>No notes yet.</p>';
+      return;
+    }
+
+    notes.forEach((note) => {
+      const div = document.createElement('div');
+      div.className = `note-item${note.id === openNoteId ? ' active' : ''}`;
+      div.innerHTML = `
+        <strong>${escapeHtml(note.title)}</strong>
+        <small>${escapeHtml(note.snippet || '')}</small>
+      `;
+      div.addEventListener('click', () => openNote(note.id));
+      list.appendChild(div);
+    });
+  } catch {
+    // handled by api helper
+  }
+}
+
+async function openNote(id) {
+  try {
+    const note = await api(`/notes/${id}`);
+    openNoteId = note.id;
+    currentNoteTitle = note.title;
+    document.getElementById('noteTitleInput').value = note.title;
+    document.getElementById('noteContentInput').value = note.content || '';
+    hideAiResult();
+    loadNotes();
+  } catch {
+    // handled by api helper
+  }
+}
+
+function setupNotes() {
+  document.getElementById('newNoteBtn').addEventListener('click', () => {
+    openNoteId = null;
+    currentNoteTitle = '';
+    document.getElementById('noteTitleInput').value = '';
+    document.getElementById('noteContentInput').value = '';
+    hideAiResult();
+    loadNotes();
+    document.getElementById('noteTitleInput').focus();
+  });
+
+  document.getElementById('saveNoteBtn').addEventListener('click', async () => {
+    const title = document.getElementById('noteTitleInput').value.trim();
+    const content = document.getElementById('noteContentInput').value;
+    if (!title) {
+      showMessage('Title is required', 'error');
+      return;
+    }
+    try {
+      if (openNoteId) {
+        await api(`/notes/${openNoteId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ title, content })
+        });
+      } else {
+        const note = await api('/notes', {
+          method: 'POST',
+          body: JSON.stringify({ title, content })
+        });
+        openNoteId = note.id;
+      }
+      currentNoteTitle = title;
+      showMessage('Note saved', 'success');
+      loadNotes();
+    } catch {
+      // handled by api helper
+    }
+  });
+
+  document.getElementById('deleteNoteBtn').addEventListener('click', async () => {
+    if (!openNoteId) {
+      showMessage('Open a note first', 'error');
+      return;
+    }
+    if (!confirm('Delete this note?')) return;
+    try {
+      await api(`/notes/${openNoteId}`, { method: 'DELETE' });
+      openNoteId = null;
+      currentNoteTitle = '';
+      document.getElementById('noteTitleInput').value = '';
+      document.getElementById('noteContentInput').value = '';
+      hideAiResult();
+      showMessage('Note deleted', 'success');
+      loadNotes();
+    } catch {
+      // handled by api helper
+    }
+  });
+
+  document.getElementById('exportNotesBtn').addEventListener('click', async () => {
+    try {
+      const notes = await api('/notes/export');
+      const blob = new Blob([JSON.stringify(notes, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'notes-export.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      // handled by api helper
+    }
+  });
+
+  const importNotesFile = document.getElementById('importNotesFile');
+  document.getElementById('importNotesBtn').addEventListener('click', () => {
+    importNotesFile.click();
+  });
+  importNotesFile.addEventListener('change', () => {
+    const file = importNotesFile.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      importNotesFile.value = '';
+      let notes;
+      try {
+        const parsed = JSON.parse(reader.result);
+        const raw = Array.isArray(parsed) ? parsed : parsed.notes;
+        if (!Array.isArray(raw)) throw new Error('Invalid notes file');
+        notes = raw.map((n) => ({ title: String(n.title ?? ''), content: String(n.content ?? '') }));
+      } catch {
+        showMessage('Invalid notes file', 'error');
+        return;
+      }
+      try {
+        const result = await api('/notes/import', {
+          method: 'POST',
+          body: JSON.stringify({ notes })
+        });
+        showMessage(`Imported ${result.imported} notes`, 'success');
+        loadNotes();
+      } catch {
+        // handled by api helper
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  setupAiTools();
+  setupFlashcards();
+}
+
+/* ---------- AI study tools ---------- */
+
+function hideAiResult() {
+  document.getElementById('aiResult').classList.add('hidden');
+  document.getElementById('aiSaveNoteBtn').classList.add('hidden');
+  document.getElementById('aiStatus').textContent = '';
+}
+
+async function generateFromNote(type) {
+  if (!openNoteId) {
+    showMessage('Open a note first', 'error');
+    return null;
+  }
+  const buttons = ['aiReviewBtn', 'aiQuizBtn', 'aiFlashcardsBtn'].map((id) => document.getElementById(id));
+  const status = document.getElementById('aiStatus');
+  buttons.forEach((btn) => { btn.disabled = true; });
+  status.textContent = 'Generating…';
+  try {
+    const data = await api('/ai/generate', {
+      method: 'POST',
+      body: JSON.stringify({ type, noteIds: [openNoteId] })
+    });
+    status.textContent = '';
+    return data;
+  } catch (err) {
+    status.textContent = err.message;
+    return null;
+  } finally {
+    buttons.forEach((btn) => { btn.disabled = false; });
+  }
+}
+
+function setupAiTools() {
+  document.getElementById('aiReviewBtn').addEventListener('click', async () => {
+    const data = await generateFromNote('review');
+    if (!data) return;
+    lastReviewContent = data.content;
+    const result = document.getElementById('aiResult');
+    result.textContent = data.content;
+    result.classList.remove('hidden');
+    document.getElementById('aiSaveNoteBtn').classList.remove('hidden');
+  });
+
+  document.getElementById('aiSaveNoteBtn').addEventListener('click', async () => {
+    if (!lastReviewContent) return;
+    try {
+      await api('/notes', {
+        method: 'POST',
+        body: JSON.stringify({ title: `Review: ${currentNoteTitle}`, content: lastReviewContent })
+      });
+      showMessage('Review saved as note', 'success');
+      loadNotes();
+    } catch {
+      // handled by api helper
+    }
+  });
+
+  document.getElementById('aiQuizBtn').addEventListener('click', async () => {
+    const data = await generateFromNote('quiz');
+    if (!data) return;
+    renderQuiz(data.quiz.questions);
+  });
+
+  document.getElementById('quizSubmitBtn').addEventListener('click', () => {
+    const blocks = document.querySelectorAll('#quizQuestions .quiz-question');
+    let correct = 0;
+    blocks.forEach((block) => {
+      const answer = Number(block.dataset.answer);
+      const checked = block.querySelector('input:checked');
+      if (checked && Number(checked.value) === answer) correct++;
+      const correctInput = block.querySelector(`input[value="${answer}"]`);
+      if (correctInput) correctInput.closest('label').classList.add('quiz-correct');
+    });
+    document.getElementById('quizScore').textContent = `${correct} / ${blocks.length} correct`;
+  });
+
+  document.getElementById('quizCloseBtn').addEventListener('click', () => {
+    document.getElementById('quizModal').classList.add('hidden');
+    document.getElementById('quizQuestions').innerHTML = '';
+    document.getElementById('quizScore').textContent = '';
+  });
+
+  document.getElementById('aiFlashcardsBtn').addEventListener('click', async () => {
+    const data = await generateFromNote('flashcards');
+    if (!data) return;
+    try {
+      const result = await api('/flashcards/bulk', {
+        method: 'POST',
+        body: JSON.stringify({ cards: data.cards })
+      });
+      showMessage(`Added ${result.added} flashcards`, 'success');
+      loadFlashcards();
+    } catch {
+      // handled by api helper
+    }
+  });
+}
+
+function renderQuiz(questions) {
+  const container = document.getElementById('quizQuestions');
+  container.innerHTML = '';
+  document.getElementById('quizScore').textContent = '';
+  questions.forEach((q, i) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-question';
+    div.dataset.answer = q.answer;
+    const options = q.options.map((option, oi) => `
+      <label>
+        <input type="radio" name="quiz-q-${i}" value="${oi}">
+        ${escapeHtml(option)}
+      </label>
+    `).join('');
+    div.innerHTML = `<p><strong>${i + 1}. ${escapeHtml(q.question)}</strong></p>${options}`;
+    container.appendChild(div);
+  });
+  document.getElementById('quizModal').classList.remove('hidden');
+}
+
+/* ---------- Flashcards ---------- */
+
+const flashcardState = { cards: [], idx: 0, flipped: false };
+
+async function loadFlashcards() {
+  try {
+    flashcardState.cards = await api('/flashcards');
+    if (flashcardState.idx >= flashcardState.cards.length) flashcardState.idx = 0;
+    flashcardState.flipped = false;
+    renderFlashcard();
+  } catch {
+    // handled by api helper
+  }
+}
+
+function renderFlashcard() {
+  const { cards, idx, flipped } = flashcardState;
+  const card = cards[idx];
+  document.getElementById('flashcardFront').textContent = card ? card.front : 'No cards yet';
+  document.getElementById('flashcardBack').textContent = card ? card.back : '';
+  document.getElementById('cardCounter').textContent = cards.length ? `${idx + 1} / ${cards.length}` : '0 / 0';
+  document.getElementById('flashcard').classList.toggle('flipped', flipped);
+}
+
+function stepFlashcard(delta) {
+  const count = flashcardState.cards.length;
+  if (!count) return;
+  flashcardState.idx = (flashcardState.idx + delta + count) % count;
+  flashcardState.flipped = false;
+  renderFlashcard();
+}
+
+function setupFlashcards() {
+  const flip = () => {
+    flashcardState.flipped = !flashcardState.flipped;
+    document.getElementById('flashcard').classList.toggle('flipped', flashcardState.flipped);
+  };
+  document.getElementById('flipCardBtn').addEventListener('click', flip);
+  document.getElementById('flashcard').addEventListener('click', flip);
+
+  document.getElementById('prevCardBtn').addEventListener('click', () => stepFlashcard(-1));
+  document.getElementById('nextCardBtn').addEventListener('click', () => stepFlashcard(1));
+
+  document.getElementById('shuffleCardsBtn').addEventListener('click', () => {
+    const { cards } = flashcardState;
+    for (let i = cards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cards[i], cards[j]] = [cards[j], cards[i]];
+    }
+    flashcardState.idx = 0;
+    flashcardState.flipped = false;
+    renderFlashcard();
+  });
+
+  document.getElementById('deleteCardBtn').addEventListener('click', async () => {
+    const card = flashcardState.cards[flashcardState.idx];
+    if (!card) return;
+    try {
+      await api(`/flashcards/${card.id}`, { method: 'DELETE' });
+      loadFlashcards();
+    } catch {
+      // handled by api helper
+    }
+  });
+
+  document.getElementById('clearCardsBtn').addEventListener('click', async () => {
+    if (!flashcardState.cards.length) return;
+    if (!confirm('Delete all flashcards?')) return;
+    try {
+      await api('/flashcards', { method: 'DELETE' });
+      loadFlashcards();
+    } catch {
+      // handled by api helper
+    }
+  });
+}
+
+/* ---------- Courses ---------- */
+
+let openCourseId = null;
+let coursesCache = [];
+
+async function loadCoursesView() {
+  openCourseId = null;
+  document.getElementById('courseDetail').classList.add('hidden');
+  document.getElementById('coursesList').classList.remove('hidden');
+  try {
+    coursesCache = await api('/courses');
+    const list = document.getElementById('coursesList');
+    list.innerHTML = '';
+
+    if (coursesCache.length === 0) {
+      list.innerHTML = '<p>No courses yet.</p>';
+      return;
+    }
+
+    coursesCache.forEach((course) => {
+      const div = document.createElement('div');
+      div.className = 'course-card';
+      div.innerHTML = `
+        <strong>${escapeHtml(course.name)}</strong>
+        <p>${escapeHtml(course.description || '')}</p>
+        <small>${course.material_count} materials · by ${escapeHtml(course.creator)}</small>
+      `;
+      div.addEventListener('click', () => openCourse(course.id));
+      list.appendChild(div);
+    });
+  } catch {
+    // handled by api helper
+  }
+}
+
+function openCourse(id) {
+  openCourseId = id;
+  const course = coursesCache.find((c) => c.id === id);
+  document.getElementById('courseDetailName').textContent = course ? course.name : '';
+  document.getElementById('courseDetailDesc').textContent = course ? (course.description || '') : '';
+  document.getElementById('coursesList').classList.add('hidden');
+  document.getElementById('courseDetail').classList.remove('hidden');
+  loadMaterials();
+}
+
+async function loadMaterials() {
+  if (!openCourseId) return;
+  try {
+    const materials = await api(`/courses/${openCourseId}/materials`);
+    const list = document.getElementById('materialsList');
+    list.innerHTML = '';
+
+    if (materials.length === 0) {
+      list.innerHTML = '<p>No materials yet.</p>';
+      return;
+    }
+
+    materials.forEach((material) => {
+      const canDelete = currentUser && (material.user_id === currentUser.id || currentUser.is_admin);
+      const div = document.createElement('div');
+      div.className = 'material-item';
+      div.innerHTML = `
+        <div class="material-main">
+          <strong>${escapeHtml(material.title)}</strong>
+          <small>by ${escapeHtml(material.username)} · ${formatDate(material.created_at)}</small>
+        </div>
+        <div class="actions">
+          <button class="btn-secondary view-material">View / Download</button>
+          ${canDelete ? '<button class="btn-danger delete-material">Delete</button>' : ''}
+        </div>
+      `;
+      div.querySelector('.view-material').addEventListener('click', () => viewMaterial(material.id));
+      const deleteBtn = div.querySelector('.delete-material');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', async () => {
+          if (!confirm('Delete this material?')) return;
+          try {
+            await api(`/courses/materials/${material.id}`, { method: 'DELETE' });
+            loadMaterials();
+          } catch {
+            // handled by api helper
+          }
+        });
+      }
+      list.appendChild(div);
+    });
+  } catch {
+    // handled by api helper
+  }
+}
+
+async function viewMaterial(id) {
+  try {
+    const material = await api(`/courses/materials/${id}`);
+    if (material.file_data) {
+      const a = document.createElement('a');
+      a.href = `data:${material.file_type};base64,${material.file_data}`;
+      a.download = material.file_name || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } else {
+      const blob = new Blob([material.content || ''], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+    }
+  } catch {
+    // handled by api helper
+  }
+}
+
+function setupCourses() {
+  document.getElementById('createCourseForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('courseNameInput').value.trim();
+    const description = document.getElementById('courseDescInput').value.trim();
+    if (!name) {
+      showMessage('Course name is required', 'error');
+      return;
+    }
+    try {
+      await api('/courses', {
+        method: 'POST',
+        body: JSON.stringify({ name, description })
+      });
+      document.getElementById('courseNameInput').value = '';
+      document.getElementById('courseDescInput').value = '';
+      showMessage('Course created', 'success');
+      loadCoursesView();
+    } catch {
+      // handled by api helper (duplicate name toasts too)
+    }
+  });
+
+  document.getElementById('courseBackBtn').addEventListener('click', () => {
+    loadCoursesView();
+  });
+
+  document.getElementById('uploadMaterialBtn').addEventListener('click', () => {
+    if (!openCourseId) {
+      showMessage('Open a course first', 'error');
+      return;
+    }
+    const title = document.getElementById('materialTitleInput').value.trim();
+    const text = document.getElementById('materialTextInput').value.trim();
+    const fileInput = document.getElementById('materialFileInput');
+    const file = fileInput.files[0];
+    if (!title) {
+      showMessage('Title is required', 'error');
+      return;
+    }
+    if (file) {
+      if (file.size > 2.5 * 1024 * 1024) {
+        showMessage('File too large (max 2.5 MB)', 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = String(reader.result).split('base64,')[1] || '';
+        uploadMaterial({
+          title,
+          content: text || undefined,
+          file_name: file.name,
+          file_type: file.type || 'application/octet-stream',
+          file_data: base64
+        });
+      };
+      reader.readAsDataURL(file);
+    } else {
+      if (!text) {
+        showMessage('Paste text or choose a file', 'error');
+        return;
+      }
+      uploadMaterial({ title, content: text });
+    }
+  });
+}
+
+async function uploadMaterial(payload) {
+  try {
+    await api(`/courses/${openCourseId}/materials`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    document.getElementById('materialTitleInput').value = '';
+    document.getElementById('materialTextInput').value = '';
+    document.getElementById('materialFileInput').value = '';
+    showMessage('Material uploaded', 'success');
+    loadMaterials();
+  } catch {
+    // handled by api helper
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme(currentTheme);
   setupAuth();
@@ -3010,6 +3579,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCalendar();
   setupTimer();
   setupSleep();
+  setupNotes();
+  setupCourses();
   setupFriends();
   setupAdmin();
   setupLeaderboard();
