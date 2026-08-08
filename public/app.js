@@ -2374,7 +2374,7 @@ function checkSleepAlarm() {
   if (!sleepSchedule || !sleepSchedule.enabled) return;
 
   const now = new Date();
-  const todayKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+  const todayKey = getSleepTodayKey();
 
   if (sleepSnoozeUntil && now >= sleepSnoozeUntil) {
     triggerSleepAlarm();
