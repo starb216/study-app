@@ -19,13 +19,13 @@ router.get('/', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { title, subject, due_date } = req.body;
+    const { title, subject, due_date, details } = req.body;
     if (!title) {
       return res.status(400).json({ error: 'Title is required' });
     }
     const result = await run(
-      'INSERT INTO tasks (user_id, title, subject, due_date) VALUES (?, ?, ?, ?)',
-      [req.userId, title, subject || '', due_date || '']
+      'INSERT INTO tasks (user_id, title, subject, due_date, details) VALUES (?, ?, ?, ?, ?)',
+      [req.userId, title, subject || '', due_date || '', details || '']
     );
     const task = await get('SELECT * FROM tasks WHERE id = ?', [result.lastID]);
     res.status(201).json(task);
@@ -37,7 +37,7 @@ router.post('/', auth, async (req, res) => {
 
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { title, subject, due_date, completed } = req.body;
+    const { title, subject, due_date, details, completed } = req.body;
     const existing = await get('SELECT * FROM tasks WHERE id = ? AND user_id = ?', [
       req.params.id,
       req.userId
@@ -47,11 +47,12 @@ router.put('/:id', auth, async (req, res) => {
     }
 
     await run(
-      'UPDATE tasks SET title = ?, subject = ?, due_date = ?, completed = ? WHERE id = ?',
+      'UPDATE tasks SET title = ?, subject = ?, due_date = ?, details = ?, completed = ? WHERE id = ?',
       [
         title !== undefined ? title : existing.title,
         subject !== undefined ? subject : existing.subject,
         due_date !== undefined ? due_date : existing.due_date,
+        details !== undefined ? details : existing.details,
         completed !== undefined ? completed : existing.completed,
         req.params.id
       ]

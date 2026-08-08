@@ -125,6 +125,7 @@
         <input type="text" id="taskTitle" placeholder="Task title" required />
         <input type="text" id="taskSubject" placeholder="Subject" />
         <input type="date" id="taskDue" />
+        <textarea id="taskDetails" placeholder="Details (optional) — click Save to hide, click Show to expand later" rows="2"></textarea>
         <button type="submit" class="btn-primary" id="taskSubmit">Add Task</button>
         <button type="button" class="btn-secondary hidden" id="taskCancel">Cancel</button>
       </form>
@@ -132,6 +133,7 @@
       <form id="tasksEventForm" class="inline-form tasks-form hidden">
         <input type="hidden" id="tasksEventId" />
         <input type="text" id="tasksEventTitle" placeholder="Event title" required />
+        <textarea id="tasksEventDetails" placeholder="Details (optional) — click Save to hide, click Show to expand later" rows="2"></textarea>
         <input type="datetime-local" id="tasksEventDate" required />
         <input type="number" id="tasksEventDuration" placeholder="Duration (min)" min="5" max="480" value="60" />
         <select id="tasksEventReminder">

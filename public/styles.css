@@ -513,6 +513,19 @@ button {
   min-width: 140px;
 }
 
+.inline-form textarea {
+  flex: 1 1 100%;
+  min-width: 100%;
+  resize: vertical;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
 .form-card {
   background: var(--card);
   padding: 1.5rem;
@@ -563,6 +576,37 @@ button {
 .task-main small,
 .event-main small {
   color: var(--muted);
+}
+
+.event-main .btn-text {
+  background: none;
+  border: none;
+  color: var(--mint);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+  margin-top: 0.25rem;
+  text-decoration: underline;
+}
+
+.event-main .btn-text:hover {
+  color: var(--text);
+}
+
+.event-details {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 3px solid var(--mint);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.event-details.hidden {
+  display: none;
 }
 
 .actions {

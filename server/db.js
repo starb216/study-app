@@ -128,6 +128,7 @@ const CREATE_TASKS = usePostgres
       title TEXT NOT NULL,
       subject TEXT,
       due_date TEXT,
+      details TEXT,
       completed INTEGER DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -138,6 +139,7 @@ const CREATE_TASKS = usePostgres
       title TEXT NOT NULL,
       subject TEXT,
       due_date TEXT,
+      details TEXT,
       completed INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -149,6 +151,7 @@ const CREATE_EVENTS = usePostgres
       user_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       event_date TEXT NOT NULL,
+      details TEXT,
       duration_minutes INTEGER DEFAULT 60,
       reminder_minutes_before INTEGER DEFAULT 0,
       notified INTEGER DEFAULT 0,
@@ -159,6 +162,7 @@ const CREATE_EVENTS = usePostgres
       user_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       event_date TEXT NOT NULL,
+      details TEXT,
       duration_minutes INTEGER DEFAULT 60,
       reminder_minutes_before INTEGER DEFAULT 0,
       notified INTEGER DEFAULT 0,
@@ -335,6 +339,20 @@ async function init() {
 
   await run(CREATE_TASKS);
   await run(CREATE_EVENTS);
+
+  try {
+    await run('ALTER TABLE tasks ADD COLUMN details TEXT');
+  } catch (err) {
+    const msg = err.message.toLowerCase();
+    if (!msg.includes('duplicate column') && !msg.includes('already exists')) throw err;
+  }
+
+  try {
+    await run('ALTER TABLE events ADD COLUMN details TEXT');
+  } catch (err) {
+    const msg = err.message.toLowerCase();
+    if (!msg.includes('duplicate column') && !msg.includes('already exists')) throw err;
+  }
 
   try {
     await run('ALTER TABLE events ADD COLUMN duration_minutes INTEGER DEFAULT 60');

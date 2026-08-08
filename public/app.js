@@ -764,17 +764,18 @@ function setupTasks() {
     const title = document.getElementById('taskTitle').value.trim();
     const subject = document.getElementById('taskSubject').value.trim();
     const due_date = document.getElementById('taskDue').value;
+    const details = document.getElementById('taskDetails').value;
 
     try {
       if (id) {
         await api(`/tasks/${id}`, {
           method: 'PUT',
-          body: JSON.stringify({ title, subject, due_date })
+          body: JSON.stringify({ title, subject, due_date, details })
         });
       } else {
         await api('/tasks', {
           method: 'POST',
-          body: JSON.stringify({ title, subject, due_date })
+          body: JSON.stringify({ title, subject, due_date, details })
         });
       }
       resetTaskForm();
@@ -796,6 +797,7 @@ function setupTasks() {
     e.preventDefault();
     const id = document.getElementById('tasksEventId').value;
     const title = document.getElementById('tasksEventTitle').value.trim();
+    const details = document.getElementById('tasksEventDetails').value;
     const event_date = document.getElementById('tasksEventDate').value;
     const duration_minutes = parseInt(document.getElementById('tasksEventDuration').value, 10) || 60;
     const reminder_minutes_before = parseInt(document.getElementById('tasksEventReminder').value, 10) || 0;
@@ -804,12 +806,12 @@ function setupTasks() {
       if (id) {
         await api(`/events/${id}`, {
           method: 'PUT',
-          body: JSON.stringify({ title, event_date, duration_minutes, reminder_minutes_before })
+          body: JSON.stringify({ title, event_date, details, duration_minutes, reminder_minutes_before })
         });
       } else {
         await api('/events', {
           method: 'POST',
-          body: JSON.stringify({ title, event_date, duration_minutes, reminder_minutes_before })
+          body: JSON.stringify({ title, event_date, details, duration_minutes, reminder_minutes_before })
         });
       }
       resetTasksEventForm();
@@ -859,6 +861,7 @@ function setupTasks() {
         document.getElementById('taskTitle').value = task.title;
         document.getElementById('taskSubject').value = task.subject || '';
         document.getElementById('taskDue').value = task.due_date || '';
+        document.getElementById('taskDetails').value = task.details || '';
         taskSubmit.textContent = 'Update Task';
         taskCancel.classList.remove('hidden');
       } catch {}
@@ -871,6 +874,7 @@ function setupTasks() {
         document.querySelector('.tasks-tabs .tab-btn[data-tasks-tab="addEvent"]').click();
         document.getElementById('tasksEventId').value = event.id;
         document.getElementById('tasksEventTitle').value = event.title;
+        document.getElementById('tasksEventDetails').value = event.details || '';
         document.getElementById('tasksEventDate').value = toDatetimeLocal(event.event_date);
         document.getElementById('tasksEventDuration').value = event.duration_minutes || 60;
         document.getElementById('tasksEventReminder').value = event.reminder_minutes_before;
@@ -1692,10 +1696,14 @@ function renderUpcomingEvents(events) {
 
   upcoming.forEach((event) => {
     const li = document.createElement('li');
+    const hasDetails = event.details && event.details.trim().length > 0;
+    const detailsId = `event-details-${event.id}`;
     li.innerHTML = `
       <div class="event-main">
         <strong>${escapeHtml(event.title)}</strong>
         <small>${formatDateTime(event.event_date)} · ${event.duration_minutes || 60} min · Remind ${event.reminder_minutes_before} min before</small>
+        ${hasDetails ? `<button type="button" class="btn-text toggle-details" data-target="${detailsId}">Show details</button>` : ''}
+        <div id="${detailsId}" class="event-details hidden">${escapeHtml(event.details).replace(/\n/g, '<br>')}</div>
       </div>
       <div class="actions">
         <button class="btn-secondary edit-event" data-id="${event.id}">Edit</button>
@@ -1703,6 +1711,16 @@ function renderUpcomingEvents(events) {
       </div>
     `;
     list.appendChild(li);
+  });
+
+  list.querySelectorAll('.toggle-details').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (target) {
+        target.classList.toggle('hidden');
+        btn.textContent = target.classList.contains('hidden') ? 'Show details' : 'Hide details';
+      }
+    });
   });
 }
 
@@ -1906,7 +1924,7 @@ function setupTimer() {
     if (timerPendingAward) {
       try { await timerPendingAward; } catch {}
     }
-    if (timerRemaining <= 0) {
+    if (startBtn.textContent === 'Start') {
       timerTotal = (parseInt(input.value, 10) || 1) * 60;
       timerRemaining = timerTotal;
       timerSecondsWorked = 0;
@@ -1980,6 +1998,15 @@ function setupTimer() {
   timerTotal = (parseInt(input.value, 10) || 1) * 60;
   timerRemaining = timerTotal;
   updateDisplay();
+
+  // Update timer display when input changes (only when not running/paused)
+  input.addEventListener('input', () => {
+    if (startBtn.textContent === 'Start') {
+      timerTotal = (parseInt(input.value, 10) || 1) * 60;
+      timerRemaining = timerTotal;
+      updateDisplay();
+    }
+  });
 }
 
 function formatIcsDate(date) {

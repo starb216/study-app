@@ -19,14 +19,14 @@ router.get('/', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { title, event_date, duration_minutes, reminder_minutes_before } = req.body;
+    const { title, event_date, details, duration_minutes, reminder_minutes_before } = req.body;
     if (!title || !event_date) {
       return res.status(400).json({ error: 'Title and event_date are required' });
     }
     const duration = parseInt(duration_minutes, 10) || 60;
     const result = await run(
-      'INSERT INTO events (user_id, title, event_date, duration_minutes, reminder_minutes_before) VALUES (?, ?, ?, ?, ?)',
-      [req.userId, title, event_date, duration, reminder_minutes_before || 0]
+      'INSERT INTO events (user_id, title, event_date, details, duration_minutes, reminder_minutes_before) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.userId, title, event_date, details || '', duration, reminder_minutes_before || 0]
     );
     const event = await get('SELECT * FROM events WHERE id = ?', [result.lastID]);
     res.status(201).json(event);
@@ -38,7 +38,7 @@ router.post('/', auth, async (req, res) => {
 
 router.put('/:id', auth, async (req, res) => {
   try {
-    const { title, event_date, duration_minutes, reminder_minutes_before, notified } = req.body;
+    const { title, event_date, details, duration_minutes, reminder_minutes_before, notified } = req.body;
     const existing = await get('SELECT * FROM events WHERE id = ? AND user_id = ?', [
       req.params.id,
       req.userId
@@ -48,10 +48,11 @@ router.put('/:id', auth, async (req, res) => {
     }
 
     await run(
-      'UPDATE events SET title = ?, event_date = ?, duration_minutes = ?, reminder_minutes_before = ?, notified = ? WHERE id = ?',
+      'UPDATE events SET title = ?, event_date = ?, details = ?, duration_minutes = ?, reminder_minutes_before = ?, notified = ? WHERE id = ?',
       [
         title !== undefined ? title : existing.title,
         event_date !== undefined ? event_date : existing.event_date,
+        details !== undefined ? details : existing.details,
         duration_minutes !== undefined ? (parseInt(duration_minutes, 10) || 60) : existing.duration_minutes,
         reminder_minutes_before !== undefined ? reminder_minutes_before : existing.reminder_minutes_before,
         notified !== undefined ? notified : existing.notified,
