@@ -578,8 +578,12 @@
 
           <section class="input-area">
             <div class="input-top">
-              <label for="authorInput">Your name</label>
+              <label>Post as</label>
               <input type="text" id="authorInput" placeholder="Student" maxlength="20" />
+              <select id="authorSelect" class="hidden">
+                <option value="Student">Student</option>
+                <option value="Anonymous">Anonymous</option>
+              </select>
               <span class="selected-category-display" id="selectedDisplay">General</span>
             </div>
             <div class="chat-input-wrap">

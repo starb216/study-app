@@ -28,9 +28,25 @@ router.post('/', auth, async (req, res) => {
     const user = await get('SELECT username FROM users WHERE id = ?', [req.userId]);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // Display-name rules (enforced server-side):
+    //   no displayAs          -> account username (default)
+    //   displayAs 'Anonymous' -> anyone may post anonymously
+    //   any other displayAs   -> admins only, non-empty, <= 30 chars
+    let author = user.username;
+    if (req.body.displayAs !== undefined && req.body.displayAs !== null) {
+      const displayAs = String(req.body.displayAs).trim().replace(/\s+/g, ' ');
+      if (displayAs === 'Anonymous') {
+        author = 'Anonymous';
+      } else if (displayAs && req.isAdmin && displayAs.length <= 30) {
+        author = displayAs;
+      } else {
+        return res.status(400).json({ error: 'Invalid display name' });
+      }
+    }
+
     const result = await run(
       'INSERT INTO chat_messages (user_id, username, category, text) VALUES (?, ?, ?, ?)',
-      [req.userId, user.username, String(category || 'General'), String(text).trim()]
+      [req.userId, author, String(category || 'General'), String(text).trim()]
     );
 
     const message = await get(

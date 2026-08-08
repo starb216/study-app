@@ -3842,3 +3842,59 @@ button {
   #chatView .subcategory-menu { left: 64px; top: -10px; }
   #chatView .header, #chatView .chat-box, #chatView .input-area { padding-left: 20px; padding-right: 20px; }
 }
+
+/* ============================================================
+   CHAT PANEL — FULLSCREEN TAKEOVER & AUTHOR SELECT
+   When the chat view is active it leaves .container and fills the
+   viewport below the sticky app header (61px = 36px brand row
+   + 2 x 0.75rem padding + 1px border; header z-index 10 stays on
+   top). :not(.hidden) scopes this to when the view is shown —
+   .hidden (display:none) removes it entirely when switching views.
+   ============================================================ */
+#chatView:not(.hidden) {
+  position: fixed;
+  top: 61px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  background: var(--bg);
+  padding: 12px;
+  margin: 0;
+  max-width: none;
+}
+
+#chatView:not(.hidden) .chat-layout {
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+  border-radius: var(--radius);
+}
+
+/* "Post as" select matches the chat's text input styling */
+#chatView .input-top select {
+  flex: 1;
+  min-width: 140px;
+  border: 1px solid var(--secondary);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--text);
+}
+
+#chatView .input-top select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+@media (max-width: 700px) {
+  #chatView:not(.hidden) {
+    padding: 0;
+  }
+  #chatView:not(.hidden) .chat-layout {
+    border-radius: 0;
+  }
+}

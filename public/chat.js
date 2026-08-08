@@ -13,6 +13,7 @@
   const chatBox = document.getElementById('chatBox');
   const chatInput = document.getElementById('chatInput');
   const authorInput = document.getElementById('authorInput');
+  const authorSelect = document.getElementById('authorSelect');
   const sendBtn = document.getElementById('sendBtn');
   const selectedDisplay = document.getElementById('selectedDisplay');
 
@@ -30,6 +31,7 @@
   window.updateChatAdminAccess = function () {
     const btn = document.getElementById('adminBtn');
     if (btn) btn.classList.toggle('hidden', !isChatAdmin());
+    syncAuthorInput();
   };
 
   /* ---------- Server chat API ---------- */
@@ -88,10 +90,12 @@
     updateMentionDots();
   }
 
-  async function saveMessage(text, category) {
+  async function saveMessage(text, category, displayAs) {
+    const body = { category, text };
+    if (displayAs) body.displayAs = displayAs;
     const message = await chatApi('/chat', {
       method: 'POST',
-      body: JSON.stringify({ category, text })
+      body: JSON.stringify(body)
     });
     const normalized = normalizeMessage(message);
     if (!messagesCache[category]) messagesCache[category] = [];
@@ -253,10 +257,22 @@
       alert('Please log in to send messages.');
       return;
     }
+    // Non-admins post as their account username (omit displayAs) or explicitly
+    // as Anonymous; admins may type any display name. The server re-enforces
+    // these rules, this just keeps the client honest.
+    let displayAs;
+    if (isChatAdmin()) {
+      const typed = authorInput.value.trim();
+      if (typed) displayAs = typed;
+    } else if (authorSelect.value === 'Anonymous') {
+      displayAs = 'Anonymous';
+    }
     sendBtn.disabled = true;
     try {
-      await saveMessage(text, selectedCategory);
+      await saveMessage(text, selectedCategory, displayAs);
       await loadChat(selectedCategory, { silent: true });
+      const lastMsg = chatBox.querySelector('.message:last-child');
+      if (lastMsg) lastMsg.classList.add('new-message');
       updateMentionDots();
       chatInput.value = '';
       chatInput.focus();
@@ -891,11 +907,24 @@
     showQuotePopup(text, e.clientX, e.clientY, msg.dataset.id, author, msg.dataset.userId);
   });
 
-  // Prefill author input with the logged-in username (server uses account name)
+  // Show the right author control for the role: admins keep the free-text
+  // input (prefilled with their username); everyone else gets a fixed choice
+  // between their account username and "Anonymous".
   function syncAuthorInput() {
     const name = getCurrentUserName();
-    if (name && name !== 'Anonymous' && authorInput.value !== name) {
-      authorInput.value = name;
+    if (isChatAdmin()) {
+      authorInput.classList.remove('hidden');
+      authorSelect.classList.add('hidden');
+      if (name && name !== 'Anonymous' && authorInput.value !== name) {
+        authorInput.value = name;
+      }
+    } else {
+      authorInput.classList.add('hidden');
+      authorSelect.classList.remove('hidden');
+      if (name && name !== 'Anonymous' && authorSelect.options[0].value !== name) {
+        authorSelect.options[0].value = name;
+        authorSelect.options[0].textContent = name;
+      }
     }
   }
 
