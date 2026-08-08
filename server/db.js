@@ -235,6 +235,9 @@ const CREATE_NOTES = usePostgres
       user_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       content TEXT NOT NULL,
+      file_name TEXT,
+      file_type TEXT,
+      file_data TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -244,6 +247,9 @@ const CREATE_NOTES = usePostgres
       user_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       content TEXT NOT NULL,
+      file_name TEXT,
+      file_type TEXT,
+      file_data TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -365,6 +371,28 @@ async function init() {
   await run(CREATE_SLEEP);
   await run(CREATE_FRIENDS);
   await run(CREATE_NOTES);
+
+  try {
+    await run('ALTER TABLE notes ADD COLUMN file_name TEXT');
+  } catch (err) {
+    const msg = err.message.toLowerCase();
+    if (!msg.includes('duplicate column') && !msg.includes('already exists')) throw err;
+  }
+
+  try {
+    await run('ALTER TABLE notes ADD COLUMN file_type TEXT');
+  } catch (err) {
+    const msg = err.message.toLowerCase();
+    if (!msg.includes('duplicate column') && !msg.includes('already exists')) throw err;
+  }
+
+  try {
+    await run('ALTER TABLE notes ADD COLUMN file_data TEXT');
+  } catch (err) {
+    const msg = err.message.toLowerCase();
+    if (!msg.includes('duplicate column') && !msg.includes('already exists')) throw err;
+  }
+
   await run(CREATE_COURSES);
   await run(CREATE_COURSE_MATERIALS);
   await run(CREATE_FLASHCARDS);

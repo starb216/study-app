@@ -3697,6 +3697,8 @@ function formatDuration(totalSeconds) {
 let openNoteId = null;
 let currentNoteTitle = '';
 let lastReviewContent = '';
+let pendingNoteAttachment = null; // { name, type, data }
+let noteAttachmentRemoved = false;
 
 async function loadNotesView() {
   await loadNotes();
@@ -3717,8 +3719,9 @@ async function loadNotes() {
     notes.forEach((note) => {
       const div = document.createElement('div');
       div.className = `note-item${note.id === openNoteId ? ' active' : ''}`;
+      const attachmentIcon = note.has_file ? ' 📎' : '';
       div.innerHTML = `
-        <strong>${escapeHtml(note.title)}</strong>
+        <strong>${escapeHtml(note.title)}${attachmentIcon}</strong>
         <small>${escapeHtml(note.snippet || '')}</small>
       `;
       div.addEventListener('click', () => openNote(note.id));
@@ -3736,10 +3739,98 @@ async function openNote(id) {
     currentNoteTitle = note.title;
     document.getElementById('noteTitleInput').value = note.title;
     document.getElementById('noteContentInput').value = note.content || '';
+    pendingNoteAttachment = note.file_data
+      ? { name: note.file_name, type: note.file_type, data: note.file_data }
+      : null;
+    noteAttachmentRemoved = false;
+    renderNoteAttachment();
     hideAiResult();
     loadNotes();
   } catch {
     // handled by api helper
+  }
+}
+
+function renderNoteAttachment() {
+  const box = document.getElementById('noteAttachment');
+  const name = document.getElementById('noteAttachmentName');
+  const download = document.getElementById('noteAttachmentDownload');
+  if (!pendingNoteAttachment) {
+    box.classList.add('hidden');
+    name.textContent = '';
+    download.href = '';
+    download.download = '';
+    return;
+  }
+  name.textContent = pendingNoteAttachment.name || 'attachment';
+  box.classList.remove('hidden');
+  try {
+    const byteString = atob(pendingNoteAttachment.data);
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+    const blob = new Blob([ab], { type: pendingNoteAttachment.type || 'application/octet-stream' });
+    download.href = URL.createObjectURL(blob);
+    download.download = pendingNoteAttachment.name || 'download';
+  } catch {
+    download.href = '#';
+    download.download = '';
+  }
+}
+
+function clearNoteAttachment() {
+  pendingNoteAttachment = null;
+  noteAttachmentRemoved = true;
+  renderNoteAttachment();
+}
+
+function readFileAsBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result;
+      const base64 = dataUrl.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function processNoteFile(file) {
+  if (!file) return;
+  if (file.size > 2.5 * 1024 * 1024) {
+    showMessage('File too large (max 2.5 MB)', 'error');
+    return;
+  }
+  const allowed = ['text/plain', 'text/markdown', 'application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+  const ext = file.name.split('.').pop().toLowerCase();
+  const allowedExts = ['txt', 'md', 'pdf', 'png', 'jpg', 'jpeg', 'webp'];
+  if (!allowedExts.includes(ext)) {
+    showMessage('Unsupported file type. Use txt, md, pdf, png, jpg, or webp.', 'error');
+    return;
+  }
+
+  try {
+    const base64 = await readFileAsBase64(file);
+    pendingNoteAttachment = { name: file.name, type: file.type || 'application/octet-stream', data: base64 };
+    noteAttachmentRemoved = false;
+
+    // For text files, also fill the note content so it's editable/searchable
+    if (ext === 'txt' || ext === 'md') {
+      const textReader = new FileReader();
+      textReader.onload = () => {
+        const textarea = document.getElementById('noteContentInput');
+        if (!textarea.value.trim()) {
+          textarea.value = textReader.result;
+        }
+      };
+      textReader.readAsText(file);
+    }
+
+    renderNoteAttachment();
+  } catch {
+    showMessage('Failed to read file', 'error');
   }
 }
 
@@ -3763,8 +3854,10 @@ function setupNotes() {
   document.getElementById('newNoteBtn').addEventListener('click', () => {
     openNoteId = null;
     currentNoteTitle = '';
+    noteAttachmentRemoved = false;
     document.getElementById('noteTitleInput').value = '';
     document.getElementById('noteContentInput').value = '';
+    clearNoteAttachment();
     hideAiResult();
     loadNotes();
     document.getElementById('noteTitleInput').focus();
@@ -3777,19 +3870,30 @@ function setupNotes() {
       showMessage('Title is required', 'error');
       return;
     }
+    const body = { title, content };
+    if (pendingNoteAttachment) {
+      body.file_name = pendingNoteAttachment.name;
+      body.file_type = pendingNoteAttachment.type;
+      body.file_data = pendingNoteAttachment.data;
+    } else if (noteAttachmentRemoved) {
+      body.file_name = null;
+      body.file_type = null;
+      body.file_data = null;
+    }
     try {
       if (openNoteId) {
         await api(`/notes/${openNoteId}`, {
           method: 'PUT',
-          body: JSON.stringify({ title, content })
+          body: JSON.stringify(body)
         });
       } else {
         const note = await api('/notes', {
           method: 'POST',
-          body: JSON.stringify({ title, content })
+          body: JSON.stringify(body)
         });
         openNoteId = note.id;
       }
+      noteAttachmentRemoved = false;
       currentNoteTitle = title;
       showMessage('Note saved', 'success');
       loadNotes();
@@ -3867,6 +3971,42 @@ function setupNotes() {
       }
     };
     reader.readAsText(file);
+  });
+
+  // Drag-and-drop file upload in notes section
+  const noteDropZone = document.getElementById('noteDropZone');
+  const noteDropFileInput = document.getElementById('noteDropFileInput');
+  if (noteDropZone && noteDropFileInput) {
+    noteDropZone.addEventListener('click', () => noteDropFileInput.click());
+    noteDropFileInput.addEventListener('change', () => {
+      processNoteFile(noteDropFileInput.files[0]);
+      noteDropFileInput.value = '';
+    });
+
+    ['dragenter', 'dragover'].forEach((event) => {
+      noteDropZone.addEventListener(event, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        noteDropZone.classList.add('drag-over');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach((event) => {
+      noteDropZone.addEventListener(event, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        noteDropZone.classList.remove('drag-over');
+      });
+    });
+
+    noteDropZone.addEventListener('drop', (e) => {
+      const file = e.dataTransfer.files[0];
+      processNoteFile(file);
+    });
+  }
+
+  document.getElementById('noteAttachmentRemove').addEventListener('click', () => {
+    clearNoteAttachment();
   });
 
   setupAiTools();

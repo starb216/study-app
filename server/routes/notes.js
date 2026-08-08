@@ -7,7 +7,9 @@ const router = express.Router();
 router.get('/', auth, async (req, res) => {
   try {
     const notes = await all(
-      'SELECT id, title, substr(content, 1, 120) AS snippet, created_at, updated_at FROM notes WHERE user_id = ? ORDER BY updated_at DESC',
+      `SELECT id, title, substr(content, 1, 120) AS snippet, file_name, file_type,
+        (file_data IS NOT NULL) AS has_file, created_at, updated_at
+       FROM notes WHERE user_id = ? ORDER BY updated_at DESC`,
       [req.userId]
     );
     res.json(notes);
@@ -53,7 +55,7 @@ router.post('/import', auth, async (req, res) => {
 
 router.get('/:id', auth, async (req, res) => {
   try {
-    const note = await get('SELECT * FROM notes WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
+    const note = await get('SELECT id, user_id, title, content, file_name, file_type, file_data, created_at, updated_at FROM notes WHERE id = ? AND user_id = ?', [req.params.id, req.userId]);
     if (!note) {
       return res.status(404).json({ error: 'Note not found' });
     }
@@ -66,15 +68,18 @@ router.get('/:id', auth, async (req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { title, content } = req.body;
+    const { title, content, file_name, file_type, file_data } = req.body;
     if (!title) {
       return res.status(400).json({ error: 'Title is required' });
     }
+    if (file_data && file_data.length > 3500000) {
+      return res.status(413).json({ error: 'File too large (max ~2.5 MB)' });
+    }
     const result = await run(
-      'INSERT INTO notes (user_id, title, content) VALUES (?, ?, ?)',
-      [req.userId, title, content || '']
+      'INSERT INTO notes (user_id, title, content, file_name, file_type, file_data) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.userId, title, content || '', file_name || null, file_type || null, file_data || null]
     );
-    const note = await get('SELECT * FROM notes WHERE id = ?', [result.lastID]);
+    const note = await get('SELECT id, user_id, title, content, file_name, file_type, file_data, created_at, updated_at FROM notes WHERE id = ?', [result.lastID]);
     res.status(201).json(note);
   } catch (err) {
     console.error('Create note error:', err.message);
@@ -88,12 +93,24 @@ router.put('/:id', auth, async (req, res) => {
     if (!existing) {
       return res.status(404).json({ error: 'Note not found' });
     }
-    const { title, content } = req.body;
+    const { title, content, file_name, file_type, file_data } = req.body;
+    if (file_data && file_data.length > 3500000) {
+      return res.status(413).json({ error: 'File too large (max ~2.5 MB)' });
+    }
     await run(
-      'UPDATE notes SET title = ?, content = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-      [title !== undefined ? title : existing.title, content !== undefined ? content : existing.content, req.params.id]
+      `UPDATE notes SET
+        title = ?, content = ?, file_name = ?, file_type = ?, file_data = ?, updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [
+        title !== undefined ? title : existing.title,
+        content !== undefined ? content : existing.content,
+        file_name !== undefined ? (file_name || null) : existing.file_name,
+        file_type !== undefined ? (file_type || null) : existing.file_type,
+        file_data !== undefined ? (file_data || null) : existing.file_data,
+        req.params.id
+      ]
     );
-    const note = await get('SELECT * FROM notes WHERE id = ?', [req.params.id]);
+    const note = await get('SELECT id, user_id, title, content, file_name, file_type, file_data, created_at, updated_at FROM notes WHERE id = ?', [req.params.id]);
     res.json(note);
   } catch (err) {
     console.error('Update note error:', err.message);

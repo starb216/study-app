@@ -4203,6 +4203,63 @@ button {
   margin-top: 0.75rem;
 }
 
+.note-attachment {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-primary-subtle);
+  border: 1px dashed var(--primary);
+  border-radius: var(--radius);
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.note-attachment.hidden {
+  display: none;
+}
+
+.note-attachment span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-drop-zone {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+  background: var(--card);
+  transition: border-color 0.2s, background 0.2s;
+  cursor: pointer;
+}
+
+.note-drop-zone:hover,
+.note-drop-zone.drag-over {
+  border-color: var(--primary);
+  background: var(--color-primary-subtle);
+}
+
+.note-drop-zone .drop-icon {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.note-drop-zone p {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.note-drop-zone small {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
 .ai-panel h3 {
   margin-top: 0;
 }

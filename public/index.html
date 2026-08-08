@@ -497,12 +497,23 @@
       <div class="notes-layout">
         <aside class="notes-sidebar">
           <div id="notesList" class="notes-list"></div>
+          <div id="noteDropZone" class="note-drop-zone">
+            <div class="drop-icon">📎</div>
+            <p>Drag & drop a file here</p>
+            <small>txt, md, pdf, or image · max 2.5 MB</small>
+            <input type="file" id="noteDropFileInput" accept=".txt,.md,.pdf,.png,.jpg,.jpeg,.webp" hidden />
+          </div>
         </aside>
 
         <div class="notes-main">
           <div class="notes-editor card">
             <input type="text" id="noteTitleInput" placeholder="Note title" maxlength="120" />
             <textarea id="noteContentInput" placeholder="Write your note here..." rows="10"></textarea>
+            <div id="noteAttachment" class="note-attachment hidden">
+              <span id="noteAttachmentName"></span>
+              <button id="noteAttachmentRemove" class="btn-link" type="button">Remove</button>
+              <a id="noteAttachmentDownload" class="btn-link" download>Download</a>
+            </div>
             <div class="notes-editor-actions">
               <button id="saveNoteBtn" class="btn-primary" type="button">Save</button>
               <button id="deleteNoteBtn" class="btn-danger" type="button">Delete</button>
