@@ -1120,6 +1120,10 @@ function createVisualDayCell(year, month, day, other, events, tasks) {
 
   const cell = document.createElement('div');
   const type = isSchool ? 'school' : isFamily ? 'family' : isWork ? 'work' : '';
+  const now = new Date();
+  const dayEvents = events.filter((e) => isSameDay(new Date(e.event_date), cellDate));
+  const dayTasks = tasks.filter((t) => t.due_date === key);
+  const hasIncompleteTasks = dayTasks.some((t) => !t.completed);
   cell.className = 'calendar-day' +
     (other ? ' other-month' : '') +
     (isToday ? ' today' : '') +
@@ -1128,18 +1132,11 @@ function createVisualDayCell(year, month, day, other, events, tasks) {
     (isSchool ? ' school-day' : '') +
     (isFamily ? ' family-day' : '') +
     (isWork ? ' work-day' : '') +
-    (isPast ? ' past-day' : '');
+    (isPast ? ' past-day' : '') +
+    (isPast ? (hasIncompleteTasks ? ' incomplete-day' : ' finished-day') : '');
 
   const badge = moodEmoji ? `<span class="mood-badge">${moodEmoji}</span>` : '';
   const holiday = holidayName ? `<span class="holiday-label">${holidayName.replace(/</g, '&lt;')}</span>` : '';
-
-  const now = new Date();
-  const dayEvents = events.filter((e) => isSameDay(new Date(e.event_date), cellDate));
-  const dayTasks = tasks.filter((t) => t.due_date === key);
-  const hasIncompleteTasks = dayTasks.some((t) => !t.completed);
-  const statusTag = isPast && !other
-    ? (hasIncompleteTasks ? '<span class="incomplete-tag">Incomplete</span>' : '<span class="finished-tag">Finished</span>')
-    : '';
 
   const chips = [];
   dayEvents.forEach((e) => {
@@ -1173,11 +1170,10 @@ function createVisualDayCell(year, month, day, other, events, tasks) {
       </svg>
       ${badge}
       ${holiday}
-      ${statusTag}
       ${chipsHtml}
     `;
   } else {
-    cell.innerHTML = `${badge}${holiday}${statusTag}${chipsHtml}<span class="day-number">${day}</span>`;
+    cell.innerHTML = `${badge}${holiday}${chipsHtml}<span class="day-number">${day}</span>`;
   }
 
   if (!other) {

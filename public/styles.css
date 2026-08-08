@@ -1234,12 +1234,22 @@ button {
   font-size: 0.8rem;
   background: var(--secondary);
   color: var(--muted);
+  position: relative;
 }
 
 .streak-day.studied {
-  background: var(--color-accent);
-  color: #fff;
-  font-weight: 700;
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.streak-day.studied::after {
+  content: '🔥';
+  position: absolute;
+  top: 1px;
+  right: 2px;
+  font-size: 0.6rem;
+  line-height: 1;
 }
 
 .streak-day.today {
@@ -1457,12 +1467,17 @@ button {
   border: none;
 }
 
-.calendar-day .day-number {
-  display: block;
+.calendar-day.finished-day {
+  background: color-mix(in srgb, var(--success) 22%, var(--card));
+  border: 2px solid var(--success);
 }
 
-.calendar-day.past-day .day-number {
-  margin-top: 12px;
+.calendar-day.incomplete-day {
+  background: color-mix(in srgb, var(--danger) 10%, var(--card));
+}
+
+.calendar-day .day-number {
+  display: block;
 }
 
 .shape-svg {
@@ -1538,30 +1553,6 @@ button {
 
 .finished-label.show {
   display: block;
-}
-
-.finished-tag,
-.incomplete-tag {
-  position: absolute;
-  top: 5px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-12deg);
-  transform-origin: center center;
-  font-size: 7px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  pointer-events: none;
-  line-height: 1;
-  z-index: 2;
-}
-
-.finished-tag {
-  color: var(--primary);
-}
-
-.incomplete-tag {
-  color: var(--danger);
 }
 
 .display-label {
