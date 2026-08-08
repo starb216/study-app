@@ -311,95 +311,167 @@
 
     <!-- Sleep -->
     <section id="sleepView" class="view hidden">
-      <div class="sleep-header">
-        <h2 class="sleep-title">🌙 Sleep Planner</h2>
-        <p class="sleep-subtitle">Set your bedtime and wake time. The alarm will sound when it's time to wake up.</p>
+      <div class="sleep-decorations">
+        <span class="sleep-deco sleep-deco-moon">🌙</span>
+        <span class="sleep-deco sleep-deco-star sleep-deco-star-1">✦</span>
+        <span class="sleep-deco sleep-deco-star sleep-deco-star-2">✧</span>
+        <span class="sleep-deco sleep-deco-star sleep-deco-star-3">✦</span>
+        <span class="sleep-deco sleep-deco-cloud">☁️</span>
+        <span class="sleep-deco sleep-deco-zzz sleep-deco-zzz-1">z</span>
+        <span class="sleep-deco sleep-deco-zzz sleep-deco-zzz-2">Z</span>
       </div>
 
-      <div class="sleep-grid">
-        <div class="sleep-stat primary">
-          <span class="stat-label">🌅 Wake-up in</span>
-          <span class="stat-value" id="sleepCountdown">--:--:--</span>
-          <span class="stat-sub" id="sleepNextWake">Set a wake time</span>
-        </div>
-        <div class="sleep-stat">
-          <span class="stat-label">🌙 Bedtime in</span>
-          <span class="stat-value" id="bedtimeCountdown">--:--:--</span>
-          <span class="stat-sub" id="sleepNextBedtime">Set a bedtime</span>
-        </div>
-        <div class="sleep-stat">
-          <span class="stat-label">⏱️ Sleep target</span>
-          <span class="stat-value" id="sleepDuration">--</span>
-          <span class="stat-sub">hours of sleep planned</span>
-        </div>
-        <div class="sleep-stat">
-          <span class="stat-label">🔔 Alarm status</span>
-          <span class="stat-value" id="alarmStatus">--</span>
-          <span class="stat-sub" id="alarmStatusSub">enable below</span>
+      <div class="sleep-hero">
+        <div class="sleep-hero-stars">✦ ✧ ✦</div>
+        <div class="sleep-header">
+          <h2 class="sleep-title">🌙 Sleep Planner</h2>
+          <p class="sleep-subtitle">Set your wake-up alarm, bedtime, and track your sleep & mood.</p>
         </div>
       </div>
 
-      <div class="sleep-timeline-card">
-        <div class="timeline-header">
-          <div>
-            <span class="timeline-label">Your schedule today</span>
-            <span class="timeline-hint">purple = sleep, red line = now</span>
-          </div>
-          <span class="timeline-time" id="currentTime">--:--</span>
-        </div>
-        <div class="timeline-track">
-          <div class="timeline-sleep" id="timelineSleep"></div>
-          <div class="timeline-now" id="timelineNow"></div>
-          <div class="timeline-marker bedtime" id="markerBedtime">
-            <span>Bedtime</span>
-            <small id="markerBedtimeTime">--:--</small>
-          </div>
-          <div class="timeline-marker wake" id="markerWake">
-            <span>Wake up</span>
-            <small id="markerWakeTime">--:--</small>
+      <div class="sleep-alarm-layout">
+        <div class="sleep-status-column">
+          <div class="sleep-status-card">
+            <span class="card-corner card-corner-tl">✦</span>
+            <span class="card-corner card-corner-br">✦</span>
+            <div class="sleep-status-main">
+              <span class="sleep-status-label">⏰ Next alarm</span>
+              <span class="sleep-status-time" id="sleepNextWake">--:--</span>
+              <span class="sleep-status-until" id="sleepCountdownLabel">Set your wake time below</span>
+              <span class="sleep-quality-pill" id="sleepQuality">No schedule yet</span>
+            </div>
+            <div class="sleep-status-side">
+              <div>
+                <span class="side-label"><span class="side-icon">🌙</span> Bedtime</span>
+                <span class="side-value" id="sleepNextBedtime">--:--</span>
+              </div>
+              <div>
+                <span class="side-label"><span class="side-icon">😴</span> Sleep length</span>
+                <span class="side-value" id="sleepDuration">--</span>
+              </div>
+              <div>
+                <span class="side-label"><span class="side-icon" id="alarmStatusIcon">🔔</span> Alarm</span>
+                <span class="side-value" id="alarmStatus">--</span>
+              </div>
+            </div>
+            <span class="last-saved" id="lastSaved"></span>
           </div>
         </div>
+
+        <form id="sleepForm" class="form-card sleep-form-simple sleep-form-column">
+          <span class="card-corner card-corner-tl">✦</span>
+          <span class="card-corner card-corner-br">✦</span>
+          <div class="form-section-badge">⚙️ Settings</div>
+          <div class="sleep-setter">
+            <div class="time-wheel-group">
+              <label>🌅 Wake up</label>
+              <div class="wheel-picker">
+                <button type="button" class="wheel-btn up" data-target="sleepWake" data-min="15" aria-label="Wake up 15 minutes later">▲</button>
+                <input type="time" id="sleepWake" required />
+                <button type="button" class="wheel-btn down" data-target="sleepWake" data-min="-15" aria-label="Wake up 15 minutes earlier">▼</button>
+              </div>
+              <div class="quick-presets">
+                <button type="button" class="qpill" data-preset-wake="06:00">6AM</button>
+                <button type="button" class="qpill" data-preset-wake="07:00">7AM</button>
+                <button type="button" class="qpill" data-preset-wake="08:00">8AM</button>
+                <button type="button" class="qpill" data-preset-wake="09:00">9AM</button>
+              </div>
+            </div>
+
+            <div class="sleep-duration-control">
+              <div class="duration-header">
+                <label for="sleepDurationSlider">😴 Sleep for</label>
+                <strong id="durationValue">8h 0m</strong>
+              </div>
+              <div class="duration-body">
+                <span class="duration-min">4h</span>
+                <input type="range" id="sleepDurationSlider" min="240" max="720" step="15" value="480" />
+                <span class="duration-max">12h</span>
+              </div>
+              <div class="quick-presets duration-presets">
+                <button type="button" class="qpill" data-preset-duration="360">6h</button>
+                <button type="button" class="qpill" data-preset-duration="420">7h</button>
+                <button type="button" class="qpill" data-preset-duration="480">8h</button>
+                <button type="button" class="qpill" data-preset-duration="540">9h</button>
+                <button type="button" class="qpill" data-preset-duration="600">10h</button>
+              </div>
+            </div>
+
+            <div class="time-wheel-group">
+              <label>🌙 Bedtime</label>
+              <div class="wheel-picker">
+                <button type="button" class="wheel-btn up" data-target="sleepBedtime" data-min="15" aria-label="Bedtime 15 minutes later">▲</button>
+                <input type="time" id="sleepBedtime" required />
+                <button type="button" class="wheel-btn down" data-target="sleepBedtime" data-min="-15" aria-label="Bedtime 15 minutes earlier">▼</button>
+              </div>
+              <small>Auto-calculated from wake time</small>
+            </div>
+          </div>
+
+          <div class="sleep-toggle-row">
+            <label class="alarm-toggle-btn">
+              <input type="checkbox" id="sleepEnabled" checked />
+              <span class="alarm-toggle-content">
+                <span class="alarm-toggle-icon" id="toggleIcon">🔔</span>
+                <span class="alarm-toggle-text">Alarm is <strong id="toggleText">ON</strong></span>
+              </span>
+            </label>
+            <button type="submit" class="btn-primary">💾 Save</button>
+          </div>
+
+          <div class="sleep-presets-inline sound-picker-row">
+            <span class="preset-label">🔔 Sound:</span>
+            <select id="alarmSoundSelect" class="alarm-sound-select"></select>
+            <button type="button" id="previewSoundBtn" class="btn-secondary">▶ Preview</button>
+          </div>
+
+          <div class="sleep-presets-inline">
+            <span class="preset-label">📅 Export:</span>
+            <button type="button" id="downloadSleepIcs" class="btn-secondary">📅 Add to Calendar</button>
+          </div>
+        </form>
       </div>
 
-      <div class="sleep-presets">
-        <span class="preset-label">Quick presets — tap to apply & save:</span>
-        <button type="button" class="btn-secondary preset-btn" data-bed="22:00" data-wake="06:00">
-          <strong>Early Bird</strong>
-          <span>22:00 – 06:00</span>
-        </button>
-        <button type="button" class="btn-secondary preset-btn" data-bed="23:00" data-wake="07:00">
-          <strong>Balanced</strong>
-          <span>23:00 – 07:00</span>
-        </button>
-        <button type="button" class="btn-secondary preset-btn" data-bed="00:00" data-wake="08:00">
-          <strong>Night Owl</strong>
-          <span>00:00 – 08:00</span>
-        </button>
-        <button type="button" class="btn-secondary preset-btn" data-bed="22:30" data-wake="07:00">
-          <strong>8.5h Sleep</strong>
-          <span>22:30 – 07:00</span>
-        </button>
+      <div class="sleep-section-divider">
+        <span class="divider-line"></span>
+        <span class="divider-icon">🌙</span>
+        <span class="divider-line"></span>
       </div>
 
-      <form id="sleepForm" class="form-card sleep-form">
-        <div class="form-section-title">Or set manually</div>
-        <div class="sleep-form-row">
-          <label>Bedtime
-            <input type="time" id="sleepBedtime" required />
-          </label>
-          <label>Wake time
-            <input type="time" id="sleepWake" required />
-          </label>
+      <div class="sleep-calendar-layout">
+        <div class="form-card sleep-chart">
+          <span class="card-corner card-corner-tl">✦</span>
+          <span class="card-corner card-corner-br">✦</span>
+          <div class="form-section-badge">📊 Insights</div>
+          <h3>📊 This week</h3>
+          <p class="chart-hint">Your mood and sleep time from the last 7 days.</p>
+          <div id="sleepChart" class="chart-container">
+            <p class="chart-empty">No check-ins yet. Fill in how you felt today to see your chart.</p>
+          </div>
         </div>
-        <div class="sleep-form-actions">
-          <label class="checkbox alarm-toggle">
-            <input type="checkbox" id="sleepEnabled" checked />
-            <span>Enable wake-up alarm</span>
+
+        <div class="form-card sleep-checkin">
+          <span class="card-corner card-corner-tl">✦</span>
+          <span class="card-corner card-corner-br">✦</span>
+          <div class="form-section-badge">📝 Daily check-in</div>
+          <h3>😊 How did you feel today?</h3>
+          <p class="checkin-hint">Pick the mood that fits best. We'll suggest the right sleep length.</p>
+          <div class="mood-buttons">
+            <button type="button" class="btn-secondary mood-btn" data-mood="tired">😴 Tired</button>
+            <button type="button" class="btn-secondary mood-btn" data-mood="stressed">😫 Stressed</button>
+            <button type="button" class="btn-secondary mood-btn" data-mood="sick">🤒 Sick</button>
+            <button type="button" class="btn-secondary mood-btn" data-mood="sad">😔 Sad</button>
+            <button type="button" class="btn-secondary mood-btn" data-mood="good">😊 Good</button>
+            <button type="button" class="btn-secondary mood-btn" data-mood="energized">⚡ Energized</button>
+          </div>
+          <label class="checkin-notes">
+            ✏️ Note (optional)
+            <textarea id="checkInNotes" rows="2" placeholder="e.g. had a headache, drank coffee late..."></textarea>
           </label>
-          <button type="button" id="downloadSleepIcs" class="btn-secondary">📅 Add to Calendar</button>
-          <button type="submit" class="btn-primary">💾 Save Schedule</button>
+          <button type="button" id="checkInBtn" class="btn-primary">✨ Get advice</button>
+          <div id="checkInAdvice" class="checkin-advice hidden"></div>
         </div>
-      </form>
+      </div>
     </section>
 
     <!-- Notes -->
@@ -727,6 +799,17 @@
       <div class="wake-alarm-controls">
         <button id="wakeAlarmStop" class="btn-danger">Stop</button>
         <button id="wakeAlarmSnooze" class="btn-secondary">Snooze 5 min</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bedtime reminder modal -->
+  <div id="bedtimeOverlay" class="alarm-overlay bedtime-overlay hidden">
+    <div class="alarm-modal bedtime-modal">
+      <h2>🌙 Bedtime</h2>
+      <p>It's time to wind down and get ready for sleep.</p>
+      <div class="alarm-controls">
+        <button id="bedtimeOk" class="btn-primary">OK</button>
       </div>
     </div>
   </div>

@@ -1,0 +1,41 @@
+{
+  "categories": [
+    {
+      "name": "Synthesized",
+      "sounds": [
+        { "id": "gentle", "label": "Gentle" },
+        { "id": "digital", "label": "Digital" },
+        { "id": "rising", "label": "Rising" },
+        { "id": "loud", "label": "Loud" },
+        { "id": "bell", "label": "Bell" },
+        { "id": "buzzer", "label": "Buzzer" },
+        { "id": "retro", "label": "Retro" },
+        { "id": "chime", "label": "Chime" }
+      ]
+    },
+    {
+      "name": "Classic",
+      "sounds": [
+        { "id": "file:classic/alarm-clock.wav", "label": "Alarm Clock" }
+      ]
+    },
+    {
+      "name": "Digital",
+      "sounds": [
+        { "id": "file:digital/beep-beep.wav", "label": "Beep Beep" }
+      ]
+    },
+    {
+      "name": "Nature",
+      "sounds": [
+        { "id": "file:nature/birds.wav", "label": "Birds" }
+      ]
+    },
+    {
+      "name": "Music",
+      "sounds": [
+        { "id": "file:music/morning.wav", "label": "Morning" }
+      ]
+    }
+  ]
+}
