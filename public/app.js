@@ -199,7 +199,6 @@ function setUser(user, token) {
 function updateAdminNav() {
   const isAdmin = currentUser && currentUser.is_admin;
   document.getElementById('adminNavLink').classList.toggle('hidden', !isAdmin);
-  if (window.updateChatAdminAccess) window.updateChatAdminAccess();
 }
 
 function requestNotificationPermission() {
@@ -290,7 +289,6 @@ function showView(view) {
   currentView = view;
   document.querySelectorAll('.view').forEach((v) => {
     v.classList.add('hidden');
-    if (v.id === 'chatView') v.classList.remove('chat-animate');
   });
   document.querySelectorAll('.nav a').forEach((a) => a.classList.remove('active'));
 
@@ -302,9 +300,6 @@ function showView(view) {
   const target = document.getElementById(`${view}View`);
   if (target) {
     target.classList.remove('hidden');
-    if (target.id === 'chatView') {
-      requestAnimationFrame(() => target.classList.add('chat-animate'));
-    }
   }
   const navLink = document.querySelector(`.nav a[data-view="${view}"]`);
   if (navLink) navLink.classList.add('active');
@@ -313,10 +308,8 @@ function showView(view) {
     case 'dashboard':
       loadDashboard();
       break;
-    case 'tasks':
+    case 'planner':
       loadTasks();
-      break;
-    case 'calendar':
       loadCalendar();
       break;
     case 'sleep':
@@ -325,14 +318,8 @@ function showView(view) {
     case 'notes':
       loadNotesView();
       break;
-    case 'courses':
-      loadCoursesView();
-      break;
     case 'friends':
       loadFriends();
-      break;
-    case 'leaderboard':
-      loadLeaderboard();
       break;
     case 'admin':
       loadAdmin();
@@ -820,6 +807,7 @@ function setupTasks() {
       }
       resetTasksEventForm();
       loadTasks();
+      renderCalendar();
       showMessage(id ? 'Event updated' : 'Event added', 'success');
     } catch {}
   });
@@ -917,34 +905,6 @@ function setupCalendar() {
     navigateCalendar(1);
   });
 
-  document.getElementById('eventForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = document.getElementById('eventId').value;
-    const title = document.getElementById('eventTitle').value.trim();
-    const event_date = document.getElementById('eventDate').value;
-    const duration_minutes = parseInt(document.getElementById('eventDuration').value, 10) || 60;
-    const reminder_minutes_before = parseInt(document.getElementById('eventReminder').value, 10) || 0;
-
-    try {
-      if (id) {
-        await api(`/events/${id}`, {
-          method: 'PUT',
-          body: JSON.stringify({ title, event_date, duration_minutes, reminder_minutes_before })
-        });
-      } else {
-        await api('/events', {
-          method: 'POST',
-          body: JSON.stringify({ title, event_date, duration_minutes, reminder_minutes_before })
-        });
-      }
-      resetEventForm();
-      renderCalendar();
-      showMessage(id ? 'Event updated' : 'Event added', 'success');
-    } catch {}
-  });
-
-  document.getElementById('eventCancel').addEventListener('click', resetEventForm);
-
   document.getElementById('eventList').addEventListener('click', async (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
@@ -961,13 +921,15 @@ function setupCalendar() {
         const events = await api('/events');
         const event = events.find((ev) => ev.id == id);
         if (!event) return;
-        document.getElementById('eventId').value = event.id;
-        document.getElementById('eventTitle').value = event.title;
-        document.getElementById('eventDate').value = toDatetimeLocal(event.event_date);
-        document.getElementById('eventDuration').value = event.duration_minutes || 60;
-        document.getElementById('eventReminder').value = event.reminder_minutes_before;
-        document.getElementById('eventSubmit').textContent = 'Update Event';
-        document.getElementById('eventCancel').classList.remove('hidden');
+        // Switch to Add Event tab
+        document.querySelector('.tasks-tabs .tab-btn[data-tasks-tab="addEvent"]').click();
+        document.getElementById('tasksEventId').value = event.id;
+        document.getElementById('tasksEventTitle').value = event.title;
+        document.getElementById('tasksEventDate').value = toDatetimeLocal(event.event_date);
+        document.getElementById('tasksEventDuration').value = event.duration_minutes || 60;
+        document.getElementById('tasksEventReminder').value = event.reminder_minutes_before;
+        document.getElementById('tasksEventSubmit').textContent = 'Update Event';
+        document.getElementById('tasksEventCancel').classList.remove('hidden');
       } catch {}
     }
   });
@@ -1745,13 +1707,6 @@ function formatTime(date) {
   return date.toLocaleTimeString('default', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-function resetEventForm() {
-  document.getElementById('eventForm').reset();
-  document.getElementById('eventId').value = '';
-  document.getElementById('eventSubmit').textContent = 'Add Event';
-  document.getElementById('eventCancel').classList.add('hidden');
-}
-
 function setupTimer() {
   const display = document.getElementById('timerDisplay');
   const input = document.getElementById('timerInput');
@@ -2452,6 +2407,22 @@ async function loadFriends() {
 }
 
 function setupFriends() {
+  // Inner tabs between Friends and Leaderboard
+  document.querySelectorAll('[data-friends-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-friends-tab]').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isLeaderboard = tab.dataset.friendsTab === 'leaderboard';
+      document.getElementById('friendsSub').classList.toggle('hidden', isLeaderboard);
+      document.getElementById('leaderboardSub').classList.toggle('hidden', !isLeaderboard);
+      if (isLeaderboard) {
+        loadLeaderboard();
+      } else {
+        loadFriends();
+      }
+    });
+  });
+
   document.getElementById('friendForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = document.getElementById('friendUsername').value.trim();
@@ -3064,6 +3035,22 @@ async function openNote(id) {
 }
 
 function setupNotes() {
+  // Inner tabs between Notes and Courses
+  document.querySelectorAll('[data-notes-tab]').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('[data-notes-tab]').forEach((t) => t.classList.remove('active'));
+      tab.classList.add('active');
+      const isCourses = tab.dataset.notesTab === 'courses';
+      document.getElementById('notesSub').classList.toggle('hidden', isCourses);
+      document.getElementById('coursesSub').classList.toggle('hidden', !isCourses);
+      if (isCourses) {
+        loadCoursesView();
+      } else {
+        loadNotesView();
+      }
+    });
+  });
+
   document.getElementById('newNoteBtn').addEventListener('click', () => {
     openNoteId = null;
     currentNoteTitle = '';

@@ -18,15 +18,11 @@
     </div>
     <nav id="mainNav" class="nav hidden">
       <a href="#dashboard" data-view="dashboard">Dashboard</a>
-      <a href="#tasks" data-view="tasks">Tasks/Events</a>
-      <a href="#calendar" data-view="calendar">Calendar</a>
+      <a href="#planner" data-view="planner">Planner</a>
       <a href="#timer" data-view="timer">Timer</a>
       <a href="#sleep" data-view="sleep">Sleep</a>
       <a href="#notes" data-view="notes">Notes</a>
-      <a href="#courses" data-view="courses">Courses</a>
       <a href="#friends" data-view="friends">Friends</a>
-      <a href="#leaderboard" data-view="leaderboard">Leaderboard</a>
-      <a href="#chat" data-view="chat">Chat</a>
       <a href="#admin" data-view="admin" id="adminNavLink" class="hidden">Admin</a>
       <div class="profile-dropdown" id="profileDropdown">
         <button class="profile-btn" id="profileBtn">
@@ -115,9 +111,9 @@
       </div>
     </section>
 
-    <!-- Tasks/Events -->
-    <section id="tasksView" class="view hidden">
-      <h2>Tasks & Events</h2>
+    <!-- Planner -->
+    <section id="plannerView" class="view hidden">
+      <h2>Planner</h2>
 
       <div class="tasks-tabs">
         <button class="tab-btn active" data-tasks-tab="addTask">Add Task</button>
@@ -151,26 +147,6 @@
 
       <h3>Upcoming</h3>
       <ul id="taskList" class="list"></ul>
-    </section>
-
-    <!-- Calendar -->
-    <section id="calendarView" class="view hidden">
-      <h2>Calendar</h2>
-      <form id="eventForm" class="inline-form">
-        <input type="hidden" id="eventId" />
-        <input type="text" id="eventTitle" placeholder="Event title" required />
-        <input type="datetime-local" id="eventDate" required />
-        <input type="number" id="eventDuration" placeholder="Duration (min)" min="5" max="480" value="60" />
-        <select id="eventReminder">
-          <option value="5">5 min before</option>
-          <option value="15" selected>15 min before</option>
-          <option value="30">30 min before</option>
-          <option value="60">1 hr before</option>
-          <option value="180">3 hrs before</option>
-        </select>
-        <button type="submit" class="btn-primary" id="eventSubmit">Add Event</button>
-        <button type="button" class="btn-secondary hidden" id="eventCancel">Cancel</button>
-      </form>
 
       <div class="calendar-view-switcher">
         <button class="view-btn active" data-cal-view="month">Month</button>
@@ -225,7 +201,7 @@
         <div class="timegrid-body" id="timeGridBody"></div>
       </div>
 
-      <h3>Upcoming</h3>
+      <h3>Upcoming events</h3>
       <ul id="eventList" class="list"></ul>
 
       <div class="alarm-overlay" id="alarmOverlay">
@@ -428,6 +404,12 @@
 
     <!-- Notes -->
     <section id="notesView" class="view hidden">
+      <div class="tasks-tabs inner-tabs">
+        <button class="tab-btn active" data-notes-tab="notes" type="button">My Notes</button>
+        <button class="tab-btn" data-notes-tab="courses" type="button">Courses</button>
+      </div>
+
+      <div id="notesSub">
       <div class="notes-header">
         <h2>📝 Notes</h2>
         <div class="notes-actions">
@@ -488,22 +470,9 @@
           </div>
         </div>
       </div>
-
-      <div id="quizModal" class="modal-overlay hidden">
-        <div class="modal-box quiz-box">
-          <h2>Quiz</h2>
-          <div id="quizQuestions"></div>
-          <div id="quizScore" class="quiz-score"></div>
-          <div class="modal-actions">
-            <button id="quizCloseBtn" class="modal-btn secondary" type="button">Close</button>
-            <button id="quizSubmitBtn" class="modal-btn primary" type="button">Check answers</button>
-          </div>
-        </div>
       </div>
-    </section>
 
-    <!-- Courses -->
-    <section id="coursesView" class="view hidden">
+      <div id="coursesSub" class="hidden">
       <div class="courses-header">
         <h2>🎓 Courses</h2>
         <form id="createCourseForm" class="inline-form">
@@ -534,11 +503,30 @@
         <h4>Materials</h4>
         <div id="materialsList" class="materials-list"></div>
       </div>
+      </div>
+
+      <div id="quizModal" class="modal-overlay hidden">
+        <div class="modal-box quiz-box">
+          <h2>Quiz</h2>
+          <div id="quizQuestions"></div>
+          <div id="quizScore" class="quiz-score"></div>
+          <div class="modal-actions">
+            <button id="quizCloseBtn" class="modal-btn secondary" type="button">Close</button>
+            <button id="quizSubmitBtn" class="modal-btn primary" type="button">Check answers</button>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Friends -->
     <section id="friendsView" class="view hidden">
       <h2>Friends</h2>
+      <div class="tasks-tabs inner-tabs">
+        <button class="tab-btn active" data-friends-tab="friends" type="button">Friends</button>
+        <button class="tab-btn" data-friends-tab="leaderboard" type="button">Leaderboard</button>
+      </div>
+
+      <div id="friendsSub">
       <form id="friendForm" class="inline-form">
         <input type="text" id="friendUsername" placeholder="Username" required />
         <button type="submit" class="btn-primary">Send Request</button>
@@ -547,10 +535,9 @@
       <ul id="pendingList" class="list"></ul>
       <h3>My Friends</h3>
       <ul id="friendList" class="list"></ul>
-    </section>
+      </div>
 
-    <!-- Leaderboard -->
-    <section id="leaderboardView" class="view hidden">
+      <div id="leaderboardSub" class="hidden">
       <div class="lb-page">
         <header class="lb-header">
           <h1>Leaderboard</h1>
@@ -596,176 +583,6 @@
 
         <footer class="lb-footer">Ranked by 🌙 earned this month (1 point per minute studied) · all-time totals are just for show · arrows mean recently moved up/down a rank</footer>
       </div>
-    </section>
-
-    <!-- Chat -->
-    <section id="chatView" class="view hidden">
-      <div class="chat-layout">
-        <aside class="sidebar">
-          <div class="sidebar-title">Categories</div>
-          <div class="category-list">
-            <div class="category active" data-category="General">
-              <span class="category-text">General</span>
-            </div>
-            <div class="category" data-category="Study tip">
-              <span class="category-text">Study tip</span>
-            </div>
-            <div class="category" data-category="Study experience">
-              <span class="category-text">Study experience</span>
-            </div>
-            <div class="category expandable" data-category="Math" id="mathCategory">
-              <span class="category-text">Math</span>
-              <span class="category-expand">{</span>
-              <div class="subcategory-menu">
-                <div class="subcategory expandable" data-category="Algebra">
-                  <span>Algebra</span>
-                  <span class="subcategory-expand">{</span>
-                  <div class="nested-menu">
-                    <div class="nested-item" data-category="Algebra 1">Algebra 1</div>
-                    <div class="nested-item" data-category="Algebra 2">Algebra 2</div>
-                  </div>
-                </div>
-                <div class="subcategory" data-category="Geometry">Geometry</div>
-                <div class="subcategory" data-category="Pre-calculus">Pre-calculus</div>
-                <div class="subcategory" data-category="Calculus">Calculus</div>
-                <div class="subcategory" data-category="Statistics">Statistics</div>
-                <div class="subcategory" data-category="Number theory">Number theory</div>
-              </div>
-            </div>
-            <div class="category expandable" data-category="Science" id="scienceCategory">
-              <span class="category-text">Science</span>
-              <span class="category-expand">{</span>
-              <div class="subcategory-menu">
-                <div class="subcategory" data-category="Biology">Biology</div>
-                <div class="subcategory" data-category="Chemistry">Chemistry</div>
-                <div class="subcategory" data-category="Physics">Physics</div>
-                <div class="subcategory" data-category="Earth science">Earth science</div>
-                <div class="subcategory" data-category="Astronomy">Astronomy</div>
-              </div>
-            </div>
-            <div class="category" data-category="Computer science">
-              <span class="category-text">Computer science</span>
-            </div>
-            <div class="category" data-category="English">
-              <span class="category-text">English</span>
-            </div>
-            <div class="category" data-category="Mandarin Chinese">
-              <span class="category-text">Mandarin Chinese</span>
-            </div>
-            <div class="category" data-category="Spanish">
-              <span class="category-text">Spanish</span>
-            </div>
-            <div class="category" data-category="French">
-              <span class="category-text">French</span>
-            </div>
-            <div class="category" data-category="Arabic">
-              <span class="category-text">Arabic</span>
-            </div>
-            <div class="category" data-category="Portuguese">
-              <span class="category-text">Portuguese</span>
-            </div>
-            <div class="category expandable" data-category="History" id="historyCategory">
-              <span class="category-text">History</span>
-              <span class="category-expand">{</span>
-              <div class="subcategory-menu">
-                <div class="subcategory" data-category="Oral History">Oral History</div>
-                <div class="subcategory" data-category="Ancient History">Ancient History</div>
-                <div class="subcategory" data-category="Modern History">Modern History</div>
-              </div>
-            </div>
-            <button class="add-subject-btn" id="addSubjectBtn" type="button">＋ Add subject</button>
-            <button class="admin-btn hidden" id="adminBtn" type="button">Admin</button>
-          </div>
-        </aside>
-
-        <main class="main">
-          <header class="header">
-            <h1>Start conversation about study!</h1>
-            <p>Share tips, experiences, or subject-specific questions. Pick a category and start talking.</p>
-          </header>
-
-          <section class="chat-box" id="chatBox">
-            <div class="empty-state" id="emptyState">No messages yet. Be the first to share a study tip!</div>
-          </section>
-
-          <section class="input-area">
-            <div class="input-top">
-              <label>Post as</label>
-              <input type="text" id="authorInput" placeholder="Student" maxlength="20" />
-              <select id="authorSelect" class="hidden">
-                <option value="Student">Student</option>
-                <option value="Anonymous">Anonymous</option>
-              </select>
-              <span class="selected-category-display" id="selectedDisplay">General</span>
-            </div>
-            <div class="chat-input-wrap">
-              <textarea class="chat-input" id="chatInput" placeholder="Type your message here..."></textarea>
-              <button class="send-btn" id="sendBtn">Send</button>
-            </div>
-          </section>
-        </main>
-      </div>
-
-      <div class="modal-overlay" id="subjectModal">
-        <div class="modal-box">
-          <h2>Request a new subject</h2>
-          <p>New subjects require admin approval before they appear in the list.</p>
-          <input type="text" id="subjectRequestInput" placeholder="e.g. History, Art, Music..." maxlength="30" />
-          <div class="modal-actions">
-            <button class="modal-btn secondary" id="cancelSubjectBtn" type="button">Cancel</button>
-            <button class="modal-btn primary" id="submitSubjectBtn" type="button">Request</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-overlay" id="adminModal">
-        <div class="modal-box admin-box">
-          <h2>Admin review</h2>
-
-          <h3>Pending additions</h3>
-          <ul class="pending-list" id="chatPendingList"></ul>
-
-          <h3>Pending deletions</h3>
-          <ul class="pending-list" id="pendingDeletionList"></ul>
-
-          <h3>Reports</h3>
-          <ul class="pending-list" id="reportList"></ul>
-
-          <h3>Prohibited users</h3>
-          <div class="admin-add-user">
-            <input type="text" id="prohibitUserInput" placeholder="Type a username to prohibit" />
-            <button class="modal-btn primary" id="prohibitUserBtn" type="button">Prohibit</button>
-          </div>
-          <ul class="pending-list" id="prohibitedList"></ul>
-
-          <div class="modal-actions">
-            <button class="modal-btn secondary" id="closeAdminBtn" type="button">Close</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-overlay" id="reportModal">
-        <div class="modal-box">
-          <h2>Report subject</h2>
-          <p id="reportSubjectName"></p>
-          <textarea id="reportReasonInput" placeholder="Why are you reporting this subject?" rows="4"></textarea>
-          <div class="modal-actions">
-            <button class="modal-btn secondary" id="cancelReportBtn" type="button">Cancel</button>
-            <button class="modal-btn primary" id="submitReportBtn" type="button">Send report</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-overlay" id="reportUserModal">
-        <div class="modal-box">
-          <h2>Report user</h2>
-          <p id="reportUserName"></p>
-          <textarea id="reportUserReasonInput" placeholder="Why are you reporting this user?" rows="4"></textarea>
-          <div class="modal-actions">
-            <button class="modal-btn secondary" id="cancelReportUserBtn" type="button">Cancel</button>
-            <button class="modal-btn primary" id="submitReportUserBtn" type="button">Send report</button>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -915,6 +732,5 @@
   </div>
 
   <script src="/app.js"></script>
-  <script src="/chat.js"></script>
 </body>
 </html>

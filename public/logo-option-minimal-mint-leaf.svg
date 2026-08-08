@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Studymint logo: a minimal mint leaf">
+  <title>Studymint Logo</title>
+  <desc>A minimal mint leaf icon for the Studymint study app.</desc>
+
+  <!-- Soft background circle -->
+  <circle cx="50" cy="50" r="46" fill="#B8F2D8" />
+
+  <!-- Leaf body -->
+  <path
+    d="M50 84
+       C32 84, 16 68, 16 48
+       C16 30, 30 16, 50 12
+       C70 16, 84 30, 84 48
+       C84 68, 68 84, 50 84 Z"
+    fill="#5FD8A3"
+    stroke="#3CB583"
+    stroke-width="2.5"
+    stroke-linejoin="round"
+  />
+
+  <!-- Main vein / stem -->
+  <line x1="50" y1="80" x2="50" y2="18" stroke="#2A9D6A" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Side veins -->
+  <path
+    d="M50 64 L34 52 M50 54 L30 40 M50 64 L66 52 M50 54 L70 40"
+    stroke="#2A9D6A"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+</svg>

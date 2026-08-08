@@ -225,26 +225,6 @@ const CREATE_FRIENDS = usePostgres
       FOREIGN KEY (addressee_id) REFERENCES users(id) ON DELETE CASCADE
     )`;
 
-const CREATE_CHAT_MESSAGES = usePostgres
-  ? `CREATE TABLE IF NOT EXISTS chat_messages (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL,
-      username TEXT NOT NULL,
-      category TEXT NOT NULL,
-      text TEXT NOT NULL,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )`
-  : `CREATE TABLE IF NOT EXISTS chat_messages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      username TEXT NOT NULL,
-      category TEXT NOT NULL,
-      text TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    )`;
-
 const CREATE_NOTES = usePostgres
   ? `CREATE TABLE IF NOT EXISTS notes (
       id SERIAL PRIMARY KEY,
@@ -366,7 +346,6 @@ async function init() {
   await run(CREATE_SESSIONS);
   await run(CREATE_SLEEP);
   await run(CREATE_FRIENDS);
-  await run(CREATE_CHAT_MESSAGES);
   await run(CREATE_NOTES);
   await run(CREATE_COURSES);
   await run(CREATE_COURSE_MATERIALS);

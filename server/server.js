@@ -18,7 +18,6 @@ app.use('/api/sleep', require('./routes/sleep'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/leaderboard', require('./routes/leaderboard'));
 app.use('/api/users', require('./routes/users'));
-app.use('/api/chat', require('./routes/chat'));
 app.use('/api/notes', require('./routes/notes'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/flashcards', require('./routes/flashcards'));

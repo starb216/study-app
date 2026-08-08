@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Studymint logo">
+  <defs>
+    <linearGradient id="mintGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B8F2D8"/>
+      <stop offset="100%" stop-color="#5FD8A3"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background hexagon -->
+  <polygon points="50,5 88,25 88,70 50,95 12,70 12,25" fill="url(#mintGrad)" opacity="0.35"/>
+
+  <!-- Outer ring hexagon -->
+  <polygon points="50,14 79,30 79,66 50,86 21,66 21,30" fill="none" stroke="#3CB583" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- Abstract book / mint leaf forms -->
+  <polygon points="50,22 68,35 68,58 50,72 32,58 32,35" fill="#5FD8A3"/>
+
+  <!-- Central page fold / stem -->
+  <polygon points="50,30 59,38 59,60 50,68 41,60 41,38" fill="#2A9D6A"/>
+
+  <!-- Top highlight triangle -->
+  <polygon points="50,22 59,30 41,30" fill="#B8F2D8"/>
+
+  <!-- Bottom detail triangle -->
+  <polygon points="50,68 59,60 41,60" fill="#3CB583"/>
+</svg>
