@@ -44,13 +44,26 @@
       <img src="/logo.png" alt="StudyMint" class="logo-img" width="36" height="36" />
       <h1>StudyMint</h1>
     </div>
-    <nav class="nav">
+    <nav id="mainNav" class="nav hidden">
       <a href="/">Dashboard</a>
-      <a href="/#planner" data-view="planner">Planner</a>
+      <a href="/#planner">Planner</a>
       <a href="/timer/" aria-current="page">Timer</a>
-      <a href="/#sleep" data-view="sleep">Sleep</a>
-      <a href="/#notes" data-view="notes">Notes</a>
-      <a href="/#friends" data-view="friends">Friends</a>
+      <a href="/#sleep">Sleep</a>
+      <a href="/#notes">Notes</a>
+      <a href="/#friends">Friends</a>
+      <a href="/#admin" id="adminNavLink" class="hidden">Admin</a>
+      <a href="/" id="timerLoginLink" class="hidden">Log in</a>
+      <div class="profile-dropdown hidden" id="profileDropdown">
+        <button class="profile-btn" id="profileBtn">
+          <span class="profile-avatar" id="profileAvatar">👤</span>
+          <span id="profileName">User</span>
+          <span>▾</span>
+        </button>
+        <div class="profile-menu hidden" id="profileMenu">
+          <a href="/#settings">Settings</a>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
     </nav>
   </header>
 
@@ -420,5 +433,74 @@
 
 <script src="./shared/timer.js"></script>
 <script src="./shared/studymint-bridge.js"></script>
+<script>
+(function () {
+  const nav = document.getElementById('mainNav');
+  const adminLink = document.getElementById('adminNavLink');
+  const loginLink = document.getElementById('timerLoginLink');
+  const profileDropdown = document.getElementById('profileDropdown');
+  const profileName = document.getElementById('profileName');
+  const profileMenu = document.getElementById('profileMenu');
+  const profileBtn = document.getElementById('profileBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function getToken() { return localStorage.getItem('token'); }
+
+  async function api(path, options = {}) {
+    const token = getToken();
+    const res = await fetch('/api' + path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: 'Bearer ' + token }),
+        ...options.headers
+      }
+    });
+    if (!res.ok) throw new Error(res.statusText);
+    return res.json();
+  }
+
+  function showNav(loggedIn) {
+    nav.classList.remove('hidden');
+    if (loggedIn) {
+      profileDropdown.classList.remove('hidden');
+      loginLink.classList.add('hidden');
+    } else {
+      profileDropdown.classList.add('hidden');
+      loginLink.classList.remove('hidden');
+    }
+  }
+
+  if (!getToken()) {
+    showNav(false);
+    return;
+  }
+
+  api('/users/me')
+    .then(me => {
+      profileName.textContent = me.username || 'User';
+      if (me.is_admin === 1 || me.is_admin === true) {
+        adminLink.classList.remove('hidden');
+      }
+      showNav(true);
+    })
+    .catch(() => {
+      localStorage.removeItem('token');
+      showNav(false);
+    });
+
+  profileBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    profileMenu.classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => profileMenu.classList.add('hidden'));
+  logoutBtn.addEventListener('click', () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('isAdmin');
+    window.location.href = '/';
+  });
+})();
+</script>
 </body>
 </html>
