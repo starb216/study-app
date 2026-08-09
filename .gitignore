@@ -21,3 +21,4 @@ study_app.db
 .idea/
 *.swp
 *.swo
+.vercel

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudyMint — Focus Timer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./shared/styles.css">
+  <link rel="stylesheet" href="./shared/focus-chat.css">
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    /* Timer-page layout overrides so the StudyMint header plays nicely with the lock-in timer design */
+    body {
+      display: block;
+      padding: 80px 20px 40px;
+    }
+    .app-header.studymint-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(8px);
+    }
+    .app-header.studymint-header a[aria-current="page"] {
+      font-weight: 800;
+      color: var(--terracotta, #c97d60);
+    }
+    .card {
+      margin: 0 auto;
+      position: relative;
+      z-index: 3;
+    }
+    @media (max-width: 600px) {
+      body { padding-top: 120px; }
+    }
+  </style>
+  <script src="./shared/common.js"></script>
+  </head>
+<body>
+  <header class="app-header studymint-header" id="studymintHeader">
+    <div class="brand">
+      <img src="/logo.png" alt="StudyMint" class="logo-img" width="36" height="36" />
+      <h1>StudyMint</h1>
+    </div>
+    <nav class="nav">
+      <a href="/">Dashboard</a>
+      <a href="/#planner" data-view="planner">Planner</a>
+      <a href="/timer/" aria-current="page">Timer</a>
+      <a href="/#sleep" data-view="sleep">Sleep</a>
+      <a href="/#notes" data-view="notes">Notes</a>
+      <a href="/#friends" data-view="friends">Friends</a>
+    </nav>
+  </header>
+
+  <div class="focus-lock-overlay" id="focusLockOverlay" aria-hidden="true">
+    <div class="focus-lock-card">
+      <div class="focus-lock-icon">🔒</div>
+      <h2>Focus Lock is on</h2>
+      <p id="focusLockReason">You stepped away. Your timer is paused.</p>
+      <button class="btn-start" id="focusLockResumeBtn" type="button">Resume Focus</button>
+      <button class="btn-reset" id="focusLockGiveUpBtn" type="button">Give Up</button>
+    </div>
+  </div>
+  <div class="bg-vignette" aria-hidden="true"></div>
+  <div class="custom-bg-layer" id="customBgLayer" aria-hidden="true"></div>
+  <div class="decor">
+    <!-- Forest -->
+    <div class="decor-sun"></div>
+    <div class="decor-sunbeam"></div>
+    <div class="decor-cloud one"></div>
+    <div class="decor-cloud two"></div>
+    <div class="decor-cloud three"></div>
+    <div class="decor-ground-back"></div>
+    <div class="decor-ground-front"></div>
+    <div class="decor-path"></div>
+    <div class="decor-tree decor-tree-back" style="left: 5%; transform: scale(0.7);"></div>
+    <div class="decor-tree decor-tree-back" style="left: 15%; transform: scale(0.55);"></div>
+    <div class="decor-tree decor-tree-back" style="right: 8%; transform: scale(0.65);"></div>
+    <div class="decor-tree decor-tree-back" style="right: 20%; transform: scale(0.5);"></div>
+    <div class="decor-tree" style="left: 8%;"></div>
+    <div class="decor-tree" style="left: 22%; transform: scale(0.9);"></div>
+    <div class="decor-tree" style="right: 12%;"></div>
+    <div class="decor-tree" style="right: 26%; transform: scale(0.8);"></div>
+    <div class="decor-flower" style="left: 12%; bottom: 14%;"></div>
+    <div class="decor-flower" style="left: 28%; bottom: 16%;"></div>
+    <div class="decor-flower" style="right: 18%; bottom: 15%;"></div>
+    <div class="decor-flower" style="right: 32%; bottom: 17%;"></div>
+    <div class="decor-grass" style="left: 10%; bottom: 11%;"></div>
+    <div class="decor-grass" style="left: 14%; bottom: 12%; animation-delay: -0.5s;"></div>
+    <div class="decor-grass" style="left: 35%; bottom: 11%;"></div>
+    <div class="decor-grass" style="left: 65%; bottom: 12%; animation-delay: -1s;"></div>
+    <div class="decor-grass" style="left: 78%; bottom: 11%;"></div>
+    <div class="decor-grass" style="left: 85%; bottom: 12%; animation-delay: -1.5s;"></div>
+    <div class="decor-falling-leaf" style="left: 10%; top: -5%; animation-delay: 0s;"></div>
+    <div class="decor-falling-leaf" style="left: 25%; top: -5%; animation-delay: -2s; animation-duration: 10s; background: rgba(180, 140, 90, 0.7);"></div>
+    <div class="decor-falling-leaf" style="left: 45%; top: -5%; animation-delay: -4s;"></div>
+    <div class="decor-falling-leaf" style="left: 65%; top: -5%; animation-delay: -6s; animation-duration: 9s;"></div>
+    <div class="decor-falling-leaf" style="left: 80%; top: -5%; animation-delay: -3s;"></div>
+    <div class="decor-bird" style="top: 15%; animation-delay: -3s;"></div>
+    <div class="decor-bird" style="top: 22%; animation-delay: -10s;"></div>
+    <div class="decor-bird" style="top: 12%; animation-delay: -15s;"></div>
+
+    <!-- Beach -->
+    <div class="decor-sun"></div>
+    <div class="decor-cloud one"></div>
+    <div class="decor-cloud two"></div>
+    <div class="decor-cloud three"></div>
+    <div class="decor-wave one"></div>
+    <div class="decor-wave two"></div>
+    <div class="decor-wave three"></div>
+    <div class="decor-wave-four"></div>
+    <div class="decor-sand"></div>
+    <div class="decor-palm" style="left: 6%;"></div>
+    <div class="decor-palm" style="right: 8%; transform: scaleX(-1);"></div>
+    <div class="decor-shell" style="left: 18%; bottom: 10%;"></div>
+    <div class="decor-shell" style="right: 22%; bottom: 12%; transform: rotate(15deg);"></div>
+    <div class="decor-starfish" style="left: 30%; bottom: 9%;"></div>
+    <div class="decor-starfish" style="right: 35%; bottom: 11%; transform: scale(0.8) rotate(30deg);"></div>
+    <div class="decor-seagull" style="top: 18%;"></div>
+    <div class="decor-seagull" style="top: 25%; animation-delay: -7s;"></div>
+    <div class="decor-seagull" style="top: 14%; animation-delay: -12s;"></div>
+
+    <!-- Jungle -->
+    <div class="decor-leaf one"></div>
+    <div class="decor-leaf two"></div>
+    <div class="decor-leaf three"></div>
+    <div class="decor-leaf four"></div>
+    <div class="decor-leaf five"></div>
+    <div class="decor-leaf six"></div>
+    <div class="decor-vine left"></div>
+    <div class="decor-vine right"></div>
+    <div class="decor-vine-leaf" style="left: 6%; top: 18%;"></div>
+    <div class="decor-vine-leaf" style="left: 6%; top: 42%; transform: scaleX(-1);"></div>
+    <div class="decor-vine-leaf" style="right: 6%; top: 25%; transform: scaleX(-1);"></div>
+    <div class="decor-vine-leaf" style="right: 6%; top: 55%;"></div>
+    <div class="decor-flower-exotic" style="left: 12%; top: 25%;"></div>
+    <div class="decor-flower-exotic" style="right: 15%; top: 35%;"></div>
+    <div class="decor-flower-exotic" style="left: 20%; bottom: 25%;"></div>
+    <div class="decor-flower-exotic" style="right: 22%; bottom: 18%;"></div>
+    <div class="decor-mist"></div>
+
+    <!-- Bamboo -->
+    <div class="decor-bamboo" style="left: 5%;"><div class="bamboo-joint"></div></div>
+    <div class="decor-bamboo" style="left: 14%; transform: scaleX(0.9);"><div class="bamboo-joint"></div></div>
+    <div class="decor-bamboo" style="left: 26%; transform: scaleX(0.75);"><div class="bamboo-joint"></div></div>
+    <div class="decor-bamboo" style="right: 18%; transform: scaleX(0.95);"><div class="bamboo-joint"></div></div>
+    <div class="decor-bamboo" style="right: 8%; transform: scaleX(0.8);"><div class="bamboo-joint"></div></div>
+    <div class="decor-bamboo" style="right: 32%; transform: scaleX(0.65);"><div class="bamboo-joint"></div></div>
+    <div class="decor-bamboo-leaf" style="left: 5%; top: 22%;"></div>
+    <div class="decor-bamboo-leaf" style="left: 14%; top: 35%; transform: scaleX(-1);"></div>
+    <div class="decor-bamboo-leaf" style="right: 18%; top: 28%;"></div>
+    <div class="decor-bamboo-leaf" style="right: 8%; top: 42%; transform: scaleX(-1);"></div>
+    <div class="decor-bamboo-leaf" style="left: 26%; top: 50%;"></div>
+    <div class="decor-bamboo-leaf" style="right: 32%; top: 55%; transform: scaleX(-1);"></div>
+    <div class="decor-ground"></div>
+    <div class="decor-rock" style="left: 12%;"></div>
+    <div class="decor-rock" style="left: 42%; transform: scale(0.7);"></div>
+    <div class="decor-rock" style="right: 15%; transform: scale(0.85);"></div>
+    <div class="decor-mist"></div>
+
+    <!-- Mountain -->
+    <div class="decor-sun"></div>
+    <div class="decor-sunray"></div>
+    <div class="decor-mountain back"></div>
+    <div class="decor-mountain mid"></div>
+    <div class="decor-mountain front"></div>
+    <div class="decor-snow back"></div>
+    <div class="decor-snow mid"></div>
+    <div class="decor-snow front"></div>
+    <div class="decor-cloud one"></div>
+    <div class="decor-cloud two"></div>
+    <div class="decor-cloud three"></div>
+    <div class="decor-cloud four"></div>
+    <div class="decor-forest-base"></div>
+    <div class="decor-pine" style="left: 8%;"></div>
+    <div class="decor-pine" style="left: 16%; transform: scale(0.85);"></div>
+    <div class="decor-pine" style="left: 28%;"></div>
+    <div class="decor-pine" style="left: 42%; transform: scale(0.75);"></div>
+    <div class="decor-pine" style="right: 12%;"></div>
+    <div class="decor-pine" style="right: 24%; transform: scale(0.9);"></div>
+    <div class="decor-pine" style="right: 36%; transform: scale(0.7);"></div>
+    <div class="decor-falling-snow" style="left: 8%; top: -5%; animation-delay: 0s;"></div>
+    <div class="decor-falling-snow" style="left: 18%; top: -5%; animation-delay: -1s; width: 4px; height: 4px;"></div>
+    <div class="decor-falling-snow" style="left: 28%; top: -5%; animation-delay: -3s;"></div>
+    <div class="decor-falling-snow" style="left: 38%; top: -5%; animation-delay: -5s; width: 5px; height: 5px;"></div>
+    <div class="decor-falling-snow" style="left: 48%; top: -5%; animation-delay: -2s;"></div>
+    <div class="decor-falling-snow" style="left: 58%; top: -5%; animation-delay: -7s; width: 4px; height: 4px;"></div>
+    <div class="decor-falling-snow" style="left: 68%; top: -5%; animation-delay: -4s;"></div>
+    <div class="decor-falling-snow" style="left: 78%; top: -5%; animation-delay: -6s; width: 5px; height: 5px;"></div>
+    <div class="decor-falling-snow" style="left: 88%; top: -5%; animation-delay: -8s;"></div>
+
+    <!-- Greenhouse -->
+    <div class="decor-greenhouse-panel"></div>
+    <div class="decor-greenhouse-plant" style="left: 8%; top: 0; animation-delay: 0s;"></div>
+    <div class="decor-greenhouse-plant" style="left: 22%; top: 0; animation-delay: -1.2s; transform: scale(0.85);"></div>
+    <div class="decor-greenhouse-plant" style="right: 18%; top: 0; animation-delay: -2.5s; transform: scale(0.92);"></div>
+    <div class="decor-greenhouse-plant" style="right: 6%; top: 0; animation-delay: -0.7s; transform: scale(0.78);"></div>
+    <div class="decor-greenhouse-droplet" style="left: 12%; animation-delay: 0s;"></div>
+    <div class="decor-greenhouse-droplet" style="left: 28%; animation-delay: -1.5s;"></div>
+    <div class="decor-greenhouse-droplet" style="left: 62%; animation-delay: -3s;"></div>
+    <div class="decor-greenhouse-droplet" style="left: 82%; animation-delay: -0.8s;"></div>
+    <div class="decor-greenhouse-sunshaft"></div>
+
+    <!-- Loft -->
+    <div class="decor-loft-window"></div>
+    <div class="decor-loft-light" style="left: 25%; animation-delay: 0s;"></div>
+    <div class="decor-loft-light" style="left: 50%; animation-delay: -1.3s;"></div>
+    <div class="decor-loft-light" style="left: 75%; animation-delay: -2.6s;"></div>
+    <div class="decor-loft-beam" style="top: 12%;"></div>
+    <div class="decor-loft-beam" style="top: 38%;"></div>
+    <div class="decor-loft-beam" style="top: 64%;"></div>
+    <div class="decor-loft-dust"></div>
+
+    <!-- Cabin -->
+    <div class="decor-cabin-fireplace"></div>
+    <div class="decor-cabin-snow" style="left: 18%; animation-delay: 0s;"></div>
+    <div class="decor-cabin-snow" style="left: 38%; animation-delay: -2s;"></div>
+    <div class="decor-cabin-snow" style="left: 58%; animation-delay: -4s;"></div>
+    <div class="decor-cabin-snow" style="left: 78%; animation-delay: -1s;"></div>
+    <div class="decor-cabin-beam" style="top: 10%;"></div>
+    <div class="decor-cabin-beam" style="top: 50%;"></div>
+    <div class="decor-cabin-beam" style="top: 85%;"></div>
+    <div class="decor-cabin-ember" style="left: 20%; animation-delay: 0s;"></div>
+    <div class="decor-cabin-ember" style="left: 35%; animation-delay: -1.2s;"></div>
+    <div class="decor-cabin-ember" style="left: 50%; animation-delay: -2.4s;"></div>
+    <div class="decor-cabin-ember" style="left: 65%; animation-delay: -0.6s;"></div>
+
+    <!-- Garden -->
+    <div class="decor-garden-trellis" style="left: 4%;"></div>
+    <div class="decor-garden-trellis" style="right: 4%;"></div>
+    <div class="decor-garden-flower" style="left: 8%; bottom: 10%; animation-delay: 0s;"></div>
+    <div class="decor-garden-flower" style="left: 16%; bottom: 13%; animation-delay: -0.7s; transform: scale(0.85);"></div>
+    <div class="decor-garden-flower" style="right: 12%; bottom: 11%; animation-delay: -1.4s;"></div>
+    <div class="decor-garden-flower" style="right: 22%; bottom: 14%; animation-delay: -2.1s; transform: scale(0.9);"></div>
+    <div class="decor-garden-butterfly" style="left: 18%; top: 28%; animation-delay: 0s;"></div>
+    <div class="decor-garden-butterfly" style="left: 70%; top: 35%; animation-delay: -2s;"></div>
+    <div class="decor-garden-butterfly" style="left: 45%; top: 22%; animation-delay: -4s;"></div>
+    <div class="decor-garden-petal" style="left: 10%; animation-delay: 0s;"></div>
+    <div class="decor-garden-petal" style="left: 30%; animation-delay: -2s;"></div>
+    <div class="decor-garden-petal" style="left: 55%; animation-delay: -4s;"></div>
+    <div class="decor-garden-petal" style="left: 75%; animation-delay: -1s;"></div>
+
+    <!-- Rooftop -->
+    <div class="decor-rooftop-lights"></div>
+    <div class="decor-rooftop-skyline"></div>
+    <div class="decor-rooftop-plant" style="left: 6%; bottom: 8%; animation-delay: 0s;"></div>
+    <div class="decor-rooftop-plant" style="right: 8%; bottom: 10%; animation-delay: -1.5s; transform: scale(0.9);"></div>
+    <div class="decor-rooftop-bokeh" style="left: 12%; animation-delay: 0s;"></div>
+    <div class="decor-rooftop-bokeh" style="left: 35%; animation-delay: -1.2s;"></div>
+    <div class="decor-rooftop-bokeh" style="left: 58%; animation-delay: -2.4s;"></div>
+    <div class="decor-rooftop-bokeh" style="left: 82%; animation-delay: -0.6s;"></div>
+
+    <!-- Bookstore -->
+    <div class="decor-bookstore-shelf" style="left: 4%; top: 12%;"></div>
+    <div class="decor-bookstore-shelf" style="left: 4%; top: 42%;"></div>
+    <div class="decor-bookstore-shelf" style="right: 4%; top: 12%;"></div>
+    <div class="decor-bookstore-shelf" style="right: 4%; top: 42%;"></div>
+    <div class="decor-bookstore-ladder"></div>
+    <div class="decor-bookstore-page" style="left: 15%; animation-delay: 0s;"></div>
+    <div class="decor-bookstore-page" style="left: 40%; animation-delay: -3s;"></div>
+    <div class="decor-bookstore-page" style="left: 65%; animation-delay: -6s;"></div>
+    <div class="decor-bookstore-page" style="left: 85%; animation-delay: -1.5s;"></div>
+    <div class="decor-bookstore-dust"></div>
+
+    <!-- Vinyl -->
+    <div class="decor-vinyl-record"></div>
+    <div class="decor-vinyl-speaker" style="left: 8%; bottom: 10%;"></div>
+    <div class="decor-vinyl-speaker" style="right: 8%; bottom: 10%;"></div>
+    <div class="decor-vinyl-note" style="left: 20%; top: 20%; animation-delay: 0s;"></div>
+    <div class="decor-vinyl-note" style="left: 45%; top: 15%; animation-delay: -1.2s;"></div>
+    <div class="decor-vinyl-note" style="left: 70%; top: 22%; animation-delay: -2.4s;"></div>
+    <div class="decor-vinyl-note" style="left: 85%; top: 18%; animation-delay: -0.6s;"></div>
+    <div class="decor-vinyl-arm"></div>
+
+    <!-- Morning Kitchen -->
+    <div class="decor-kitchen-steam" style="left: 22%; bottom: 22%; animation-delay: 0s;"></div>
+    <div class="decor-kitchen-steam" style="left: 26%; bottom: 22%; animation-delay: -0.8s;"></div>
+    <div class="decor-kitchen-steam" style="left: 30%; bottom: 22%; animation-delay: -1.6s;"></div>
+    <div class="decor-kitchen-windowlight"></div>
+    <div class="decor-kitchen-fruit" style="right: 18%; bottom: 12%;"></div>
+    <div class="decor-kitchen-kettle" style="left: 18%; bottom: 10%;"></div>
+
+    <!-- Sunny Meadow -->
+    <div class="decor-meadow-wildflower" style="left: 7%; bottom: 8%; animation-delay: 0s;"></div>
+    <div class="decor-meadow-wildflower" style="left: 15%; bottom: 11%; animation-delay: -0.6s; transform: scale(0.85);"></div>
+    <div class="decor-meadow-wildflower" style="right: 10%; bottom: 9%; animation-delay: -1.2s;"></div>
+    <div class="decor-meadow-wildflower" style="right: 20%; bottom: 12%; animation-delay: -1.8s; transform: scale(0.9);"></div>
+    <div class="decor-meadow-bee" style="left: 20%; top: 30%; animation-delay: 0s;"></div>
+    <div class="decor-meadow-bee" style="left: 55%; top: 25%; animation-delay: -2s;"></div>
+    <div class="decor-meadow-bee" style="left: 78%; top: 35%; animation-delay: -4s;"></div>
+    <div class="decor-meadow-sunray"></div>
+    <div class="decor-meadow-grass" style="left: 5%; bottom: 5%; animation-delay: 0s;"></div>
+    <div class="decor-meadow-grass" style="left: 25%; bottom: 6%; animation-delay: -0.5s;"></div>
+    <div class="decor-meadow-grass" style="left: 50%; bottom: 5%; animation-delay: -1s;"></div>
+    <div class="decor-meadow-grass" style="left: 75%; bottom: 6%; animation-delay: -1.5s;"></div>
+    <div class="decor-meadow-grass" style="left: 90%; bottom: 5%; animation-delay: -0.7s;"></div>
+  </div>
+
+  <div class="card">
+    <h1 id="pageTitle">Lock In Timer</h1>
+    <p class="subtitle" id="themeQuote">Set your focus time and lock in.</p>
+
+    <div class="top-actions">
+      <button class="icon-btn" id="zenBtn" title="Zen mode">🧘 Zen</button>
+      <button class="icon-btn" id="fullscreenBtn" title="Fullscreen">⛶ Full</button>
+      <button class="icon-btn" id="shortcutsBtn" title="Keyboard shortcuts" type="button">?</button>
+    </div>
+
+    <div class="theme-picker">
+      <button class="theme-btn active" data-theme="coastal">🌊 Coastal</button>
+      <button class="theme-btn" data-theme="forest">🌲 Forest</button>
+      <button class="theme-btn" data-theme="beach">🏖️ Beach</button>
+      <button class="theme-btn" data-theme="jungle">🌿 Jungle</button>
+      <button class="theme-btn" data-theme="bamboo">🎋 Bamboo</button>
+      <button class="theme-btn" data-theme="mountain">🏔️ Mountain</button>
+      <button class="theme-btn" data-theme="sunset">🌅 Sunset</button>
+      <button class="theme-btn" data-theme="ocean-deep">🌊 Ocean</button>
+      <button class="theme-btn" data-theme="desert">🏜️ Desert</button>
+      <button class="theme-btn" data-theme="aurora">🌌 Aurora</button>
+      <button class="theme-btn" data-theme="city-night">🌃 City</button>
+      <button class="theme-btn" data-theme="cherry-blossom">🌸 Sakura</button>
+      <button class="theme-btn" data-theme="lavender">💜 Lavender</button>
+      <button class="theme-btn" data-theme="autumn">🍂 Autumn</button>
+      <button class="theme-btn" data-theme="winter">❄️ Winter</button>
+      <button class="theme-btn" data-theme="tropical">🌺 Tropical</button>
+      <button class="theme-btn" data-theme="space">🚀 Space</button>
+      <button class="theme-btn" data-theme="cotton-candy">🍬 Candy</button>
+      <button class="theme-btn" data-theme="midnight">🌙 Midnight</button>
+      <button class="theme-btn" data-theme="mint">🌿 Mint</button>
+      <button class="theme-btn" data-theme="rose-gold">🌹 Rose</button>
+      <button class="theme-btn" data-theme="storm">⛈️ Storm</button>
+      <button class="theme-btn" data-theme="golden-hour">🌇 Gold</button>
+      <button class="theme-btn" data-theme="foggy-lake">🌫️ Fog</button>
+      <button class="theme-btn" data-theme="neon">⚡ Neon</button>
+      <button class="theme-btn" data-theme="pastel">🎨 Pastel</button>
+      <button class="theme-btn" data-theme="library">📚 Library</button>
+      <button class="theme-btn" data-theme="greenhouse">🌿 Greenhouse</button>
+      <button class="theme-btn" data-theme="loft">🏭 Loft</button>
+      <button class="theme-btn" data-theme="cabin">🪵 Cabin</button>
+      <button class="theme-btn" data-theme="garden">🌻 Garden</button>
+      <button class="theme-btn" data-theme="rooftop">🏙️ Rooftop</button>
+      <button class="theme-btn" data-theme="bookstore">📖 Bookstore</button>
+      <button class="theme-btn" data-theme="vinyl">🎶 Vinyl</button>
+      <button class="theme-btn" data-theme="morning-kitchen">☕ Kitchen</button>
+      <button class="theme-btn" data-theme="sunny-meadow">🌾 Meadow</button>
+    </div>
+
+    <div class="preset-buttons">
+      <button class="preset" data-min="5">5 min</button>
+      <button class="preset" data-min="15">15 min</button>
+      <button class="preset" data-min="25">25 min</button>
+      <button class="preset" data-min="45">45 min</button>
+      <button class="preset" data-min="60">1 hour</button>
+    </div>
+
+    <div class="timer-circle" id="timerCircle">
+      <div class="timer-inner" id="timerDisplay">00:00:00</div>
+    </div>
+    <div class="phase-badge" id="phaseBadge"></div>
+
+    <div class="inputs" id="inputs">
+      <div class="input-group">
+        <label>Hours</label>
+        <input type="number" id="hours" min="0" max="999" value="0">
+      </div>
+      <div class="input-group">
+        <label>Minutes</label>
+        <input type="number" id="minutes" min="0" max="59" value="25">
+      </div>
+      <div class="input-group">
+        <label>Seconds</label>
+        <input type="number" id="seconds" min="0" max="59" value="0">
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="btn-start" id="startBtn">Start</button>
+      <button class="btn-pause" id="pauseBtn" disabled>Pause</button>
+      <button class="btn-reset" id="resetBtn">Reset</button>
+    </div>
+
+    <div class="message" id="message"></div>
+
+    <div class="focus-lock-panel" id="focusLockPanel">
+      <div class="focus-lock-header" id="focusLockHeader">
+        <h3>🔒 Focus Lock</h3>
+        <span class="focus-lock-chevron">▼</span>
+      </div>
+      <div class="focus-lock-body">
+        <label class="focus-lock-row">
+          <input type="checkbox" id="focusLockEnabled">
+          <span>Enable Focus Lock while timer runs</span>
+        </label>
+        <p class="focus-lock-hint">When enabled, leaving this tab or closing the page will pause the timer and require you to resume.</p>
+        <label class="focus-lock-label" for="focusLockBlockedSites">Blocked sites / distractions</label>
+        <textarea class="focus-lock-sites" id="focusLockBlockedSites" rows="3" placeholder="youtube.com&#10;twitter.com&#10;reddit.com"></textarea>
+        <p class="focus-lock-hint">Enter one site per line. The timer will pause if you visit any of these in this tab.</p>
+      </div>
+    </div>
+
+    <div id="fcFeatureBar" class="fc-feature-bar"></div>
+  </div>
+
+  
+  <!-- Keyboard shortcuts help panel -->
+  <div class="shortcuts-panel" id="shortcutsPanel">
+    <div class="shortcuts-card" role="dialog" aria-modal="true" aria-labelledby="shortcutsTitle">
+      <h3 id="shortcutsTitle">Keyboard Shortcuts</h3>
+      <ul class="shortcuts-list">
+        <li><span>Start / Pause timer</span> <kbd>Space</kbd></li>
+        <li><span>Reset timer</span> <kbd>R</kbd></li>
+        <li><span>Open this help panel</span> <kbd>?</kbd></li>
+        <li><span>Exit Zen mode</span> <kbd>Esc</kbd></li>
+      </ul>
+      <button class="shortcuts-close" id="shortcutsClose" type="button">Close</button>
+    </div>
+  </div>
+
+<script src="./shared/timer.js"></script>
+<script src="./shared/studymint-bridge.js"></script>
+</body>
+</html>
