@@ -135,6 +135,7 @@ Deck: `docs/deck/studymint-deck.pdf` (10 slides)
 - Keep this slide under 20 seconds.
 
 **Slide 10 — The Ask**
-- Three clear asks: try it, give feedback, tell a friend.
+- Three clear asks: try it, give feedback, vote for StudyMint.
 - Read the URL one last time.
-- End with energy and thank the audience.
+- End with a direct competition ask: “If you want students to have one focused workspace, vote for StudyMint.”
+- Thank the audience.
